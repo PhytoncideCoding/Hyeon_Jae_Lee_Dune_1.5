@@ -104,5 +104,20 @@ int main(void) {
 	//		Sleep(TICK);
 	//	}
 	//}
-
+	
+	//p12 q가 입력되고 나서 3초 후에 종료하기
+	int sys_clock = 0;
+	while (1) {
+		if (_kbhit()) {
+			int key = _getch();
+			if (key == 'q') {
+				while (sys_clock < 3000) {// 0 1 2 3
+					Sleep(TICK); //10ms 지난 다음 sysclock이 10ms 증가
+					sys_clock += 10;
+				}
+				break;
+			}
+		}
+	}
+	return 0;
 }
