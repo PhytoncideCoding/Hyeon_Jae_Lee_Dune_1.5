@@ -67,27 +67,42 @@
 #include <Windows.h>
 #include <conio.h>
 
-# define TICK 10;
+
+#define TICK 10
 
 int sys_clock = 0;// 0부터 시작
 
 int main(void) {
-	int sec = 1;//sec는 1부터 시작
+	//Sleep에 대한 이해 
+	
+	//int sec = 1;//sec는 1부터 시작
 	//1tick 10ms 이 프로그램이 동작하는 최소 시간 단위
 	//가장 단순한 방법Sleep()사용, 이 방법으로 정확한 시간 제어 어려움 -> 밀린다.
-	while (1) {
-		if (sys_clock % 3000 == 0) {
-			printf("안녕하세요\n");
-		}
-		//sysclock = 0 : 1초텀 후 1초 출력 후 2초로 변경
-		//sysclock = 1000 : 2초 출력 sec : 3초
-		//sysclcok = 2000 : 3초 출력 sec : 4초 
-		//1 ---> 사건----> 2 ---> 사건 ---> 3 --->안녕하세요---> 4 사건 표현의 방식  
-		if (sys_clock % 1000 == 0) {
-			printf("sec: %d\n", sec);
-			sec ++;
-		}
-		Sleep(10); //10ms 지난 다음 sysclock이 10ms 증가
-		sys_clock += 10;
-	}
+	//while (1) {
+	//	if (sys_clock % 3000 == 0) {
+	//		printf("안녕하세요\n");
+	//	}
+	//	//sysclock = 0 : 1초텀 후 1초 출력 후 2초로 변경
+	//	//sysclock = 1000 : 2초 출력 sec : 3초
+	//	//sysclcok = 2000 : 3초 출력 sec : 4초 
+	//	//1 ---> 사건----> 2 ---> 사건 ---> 3 --->안녕하세요---> 4 사건 표현의 방식  
+	//	if (sys_clock % 1000 == 0) {
+	//		printf("sec: %d\n", sec);
+	//		sec ++;
+	//	}
+	//	Sleep(TICK); //10ms 지난 다음 sysclock이 10ms 증가
+	//	sys_clock += 10;
+	//}
+
+	////키 입력 받기 이해
+	//while (1) {
+	//	if (_kbhit()) {
+	//		int key = _getch();
+	//		if (key == 'q') {
+	//			break;
+	//		}
+	//		Sleep(TICK);
+	//	}
+	//}
+
 }
