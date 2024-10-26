@@ -84,22 +84,30 @@ int main(void) {
 	//		}
 	//	}
 	//}
-	//p15 방향 키 입력 받기
-	while (1) {
-		KEY key = get_key();
+	////p15 방향 키 입력 받기
+	//
+	//while (1) {
+	//	KEY key = get_key();
 
-		switch (key) {
-		case k_quit: printf("exiting...\n"); return 0;
-		case k_up: printf("up\n"); break;
-		case k_left: printf("left\n"); break;
-		case k_right: printf("right\n"); break;
-		case k_down: printf("down\n"); break;
-		default: break;
-		}
-		Sleep(TICK);
+	//	switch (key) {
+	//	case k_quit: printf("exiting...\n"); return 0;
+	//	case k_up: printf("up\n"); break;
+	//	case k_left: printf("left\n"); break;
+	//	case k_right: printf("right\n"); break;
+	//	case k_down: printf("down\n"); break;
+	//	default: break;
+	//	}
+	//	Sleep(TICK);
+	//	
+ //   }
+
+	////p16 색상 변경 함수 0~15가지 글자색 0~15가지 배경색 순차변경
+	//for (int color = 0x00; color < 0xFF; color++) {
+	//	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+	//	printf("%d번은 무슨 색일까요?\n", color);
+	//}
 		
-   }
-
 
 	return 0;
 }
+
