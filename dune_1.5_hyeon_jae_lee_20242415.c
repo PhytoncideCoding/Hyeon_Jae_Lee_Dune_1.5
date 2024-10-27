@@ -36,6 +36,18 @@ KEY get_key(void) {
 	}
 }
 
+//typedef
+//struct coordination_t {
+//	int column;
+//	int row;
+//} COORD;
+
+//p17
+void gotoxy(short, short);
+void gotoxy(short x, short y) {
+	COORD coord = { x, y };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
 
 int main(void) {
 	//p10 Sleep에 대한 이해 
@@ -99,15 +111,23 @@ int main(void) {
 	//	}
 	//	Sleep(TICK);
 	//	
- //   }
+	//   }
 
 	////p16 색상 변경 함수 0~15가지 글자색 0~15가지 배경색 순차변경
 	//for (int color = 0x00; color < 0xFF; color++) {
 	//	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 	//	printf("%d번은 무슨 색일까요?\n", color);
 	//}
-		
+	
+	//p17 커서 이동시키기
+	srand((unsigned int)time(NULL));
+	while (1) {
+		gotoxy(rand() % 300 / 2, rand() % 40);
+		printf("*");
+		Sleep(1000);
+	}
 
+	
 	return 0;
 }
 
