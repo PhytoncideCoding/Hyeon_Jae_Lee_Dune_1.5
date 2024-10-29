@@ -1,8 +1,7 @@
 //#include <stdio.h>
 //#include <Windows.h>
 //#include <conio.h>
-//
-//
+
 //#define TICK 10
 //
 //int sys_clock = 0;// 0부터 시작
@@ -35,16 +34,14 @@
 //	default: return k_undef;
 //	}
 //}
-//
-//
-//
+
 ////p17
 //void gotoxy(short, short);
 //void gotoxy(short x, short y) {
 //	COORD coord = { x, y };
 //	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 //}
-//
+
 //int main(void) {
 //	//p10 Sleep에 대한 이해 
 //	
@@ -107,7 +104,7 @@
 //	//	}
 //	//	Sleep(TICK);
 //	//	
-//	//   }
+//	//  }
 //
 //	////p16 색상 변경 함수 0~15가지 글자색 0~15가지 배경색 순차변경
 //	//for (int color = 0x00; color < 0xFF; color++) {
