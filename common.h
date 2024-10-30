@@ -8,7 +8,7 @@
 #include <assert.h>
 
 /* ================= system parameters =================== */
-#define TICK 10		// time unit(ms)
+#define TICK 1000		// time unit(ms)
 
 #define N_LAYER 2
 #define MAP_WIDTH	60
@@ -39,7 +39,7 @@ typedef enum {
 
 // DIRECTION은 KEY의 부분집합이지만, semantic 열거체 정의
 typedef enum {
-	d_stay = 0, d_up, d_right, d_left, d_down
+	d_stay = 0, d_up, d_left, d_right, d_down
 } DIRECTION;
 
 
@@ -66,7 +66,7 @@ inline POSITION position_subtraction_f_inline(POSITION p1, POSITION p2) {
 
 // DIRECTION을 POSITION 벡터로 변환해서 좌표를 연산할 준비를 도와주는 함수
 inline POSITION dtop(DIRECTION d) {
-	static POSITION direction_vector[] = { {0, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 0} };
+	static POSITION direction_vector[] = { {0, 0}, {-1, 0}, {0, -1}, {0, 1}, {1, 0} };
 	return direction_vector[d];
 }
 
@@ -81,15 +81,15 @@ typedef struct {
 	int population_max;  // 수용 가능한 인구 수
 } RESOURCE;
 
-
 // 대강 만들어 봤음. 기능 추가하면서 각자 수정할 것
 typedef struct {
 	POSITION pos;		// 현재 위치(position)
 	POSITION dest;		// 목적지(destination)
-	char repr;			// 화면에 표시할 문자(representation)
+	char attachment;
+	char representation;			// 화면에 표시할 문자
 	int speed;
 	int move_period;	// '몇 ms마다 한 칸 움직이는지'를 뜻함
 	int next_move_time;	// 다음에 움직일 시간
-} OBJECT_SAMPLE;
+} UNIT_ATTRIBUTE;
 
 #endif

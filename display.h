@@ -10,17 +10,20 @@
 
 #include "common.h"
 
-// 표시할 색상 정의. 대충 맞춰 뒀는데, 취향껏 추가하거나 변경하기
-#define COLOR_DEFAULT	15
-#define COLOR_CURSOR	112
-#define COLOR_RESOURCE  112
+// 표시할 색상 정의
+#define COLOR_DEFAULT	15 //하얀 글꼴
+#define CURSOR_CURRENT_COLOR	223
+#define COLOR_RESOURCE  243
+#define INTRO_OUTTRO_TITLE 6
+#define INTRO_OUTTRO_CONTENT 14
+#define ATREIDES_COLOR 159
+#define HACONEN_COLOR 79
+#define PLATE_COLOR 143
+//주황색은 SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color)에 존재하지 않아서
+//Dark Yellow: 스파이스 Yellow: 샌드웜으로 설정하였습니다.
+#define SPICE_COLOR 111
+#define SAND_WORM_COLOR 236
+#define ROCK_COLOR 127
 
-// 지금은 자원, 맵, 커서만 표시
-// 앞으로 화면에 표시할 내용들 여기에 추가하기
-void display(
-	RESOURCE resource,
-	char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
-	CURSOR cursor
-);
 
 #endif

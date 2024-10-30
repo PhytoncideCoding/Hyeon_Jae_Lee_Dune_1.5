@@ -1,6 +1,3 @@
-/*
-* raw(?) I/O
-*/
 #ifndef _IO_H_
 #define _IO_H_
 
@@ -12,4 +9,5 @@ extern void gotoxy(POSITION pos);
 void set_color(int color);
 
 #endif
+
 

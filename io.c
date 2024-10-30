@@ -1,6 +1,3 @@
-/*
-* raw(?) I/O
-*/
 #include "io.h"
 
 //커서 좌표 이동함수
@@ -14,7 +11,7 @@ void set_color(int color) {
 }
 // 1. 원하는 색깔로 설정 2. 원하는 좌표로 이동 3.인수로 받은 문자를 출력
 void printc(POSITION pos, char ch, int color) {
-	if (color >= 0) { 
+	if (color >= 0) {
 		set_color(color);
 	}
 	gotoxy(pos);
