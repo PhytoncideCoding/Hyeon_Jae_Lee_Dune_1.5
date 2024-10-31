@@ -4,7 +4,7 @@
 #include "common.h"
 #include "io.h"
 #include "display.h"
-
+//init 변경하기
 	void init(void);
 	void intro(void);
 	void outro(void);
@@ -27,6 +27,15 @@
 		.spice_max = 0,
 		.population = 0,
 		.population_max = 0
+	};
+
+	UNIT_ATTRIBUTE  Atreides_Base = {
+		.pos = {1, 2},
+		.attachment = 'A'
+	};
+
+	UNIT_ATTRIBUTE  Haconen_Base = {
+	.attachment = 'H'
 	};
 
 	UNIT_ATTRIBUTE obj = {
@@ -55,12 +64,8 @@
 		.next_move_time = 300 //다음에 움직일 시간
 	};
 
-	UNIT_ATTRIBUTE Sand_Worm = {
-		.pos = {4, 4},
-		.dest = {MAP_HEIGHT - 2, MAP_WIDTH - 2},
-		.representation = 'W',
-		.speed = 300,
-		.next_move_time = 300
+	UNIT_ATTRIBUTE Sand_Worm[2] = {
+		{.pos = {4, 4}}, {.pos = {12, MAP_WIDTH - 10}}
 	};
 
 	/* ================= main() =================== */
@@ -75,7 +80,7 @@
 
 		display_resource(Spice_Population);
 		display_map(map, Atreides_Harvestor, Haconen_Harvestor);
-		display_cursor(cursor);
+		display_cursor(cursor, Atreides_Harvestor, Haconen_Harvestor);
 		while (1) {
 			// (4) loop 돌 때마다 0부터 시작해서 0.01초 마다 키 입력 확인 
 			
@@ -105,7 +110,7 @@
 			// 화면 출력
 			display_resource(Spice_Population);
 			display_map(map, Atreides_Harvestor, Haconen_Harvestor);
-			display_cursor(cursor);
+			display_cursor(cursor, Atreides_Harvestor, Haconen_Harvestor);
 			// 시간의 단위
 			Sleep(TICK);
 			sys_clock += 1000;
@@ -208,8 +213,8 @@
 		map[1][obj.pos.row][obj.pos.column] = 'o';
 		map[1][Atreides_Harvestor.pos.row][Atreides_Harvestor.pos.column] = 'H';
 		map[1][Haconen_Harvestor.pos.row][Haconen_Harvestor.pos.column] = 'H';
-		map[1][Sand_Worm.pos.row][Sand_Worm.pos.column] = 'W';
-		
+		map[1][Sand_Worm[0].pos.row][Sand_Worm[0].pos.column] = 'W';
+		map[1][Sand_Worm[1].pos.row][Sand_Worm[1].pos.column] = 'W';
 	}
 
 	//===================================커서 이동 함수================================//

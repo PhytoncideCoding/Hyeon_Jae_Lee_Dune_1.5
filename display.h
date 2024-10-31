@@ -11,9 +11,9 @@
 #include "common.h"
 
 // 표시할 색상 정의
-#define COLOR_DEFAULT	15 //하얀 글꼴
-#define CURSOR_CURRENT_COLOR	223
-#define COLOR_RESOURCE  243
+#define COLOR_DEFAULT 15 //하얀 글꼴
+#define CURSOR_CURRENT_COLOR 223
+#define COLOR_RESOURCE 243
 #define INTRO_OUTTRO_TITLE 6
 #define INTRO_OUTTRO_CONTENT 14
 #define ATREIDES_COLOR 159
@@ -24,6 +24,5 @@
 #define SPICE_COLOR 111
 #define SAND_WORM_COLOR 236
 #define ROCK_COLOR 127
-
 
 #endif

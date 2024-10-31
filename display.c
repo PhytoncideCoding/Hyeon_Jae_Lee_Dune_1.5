@@ -23,10 +23,10 @@ void display_resource(RESOURCE resource);
 void display_map(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH], 
 				UNIT_ATTRIBUTE Atreides_Harvestor,
 				UNIT_ATTRIBUTE Haconen_Harvestor);
-void display_cursor(CURSOR cursor);
 
-
-
+void display_cursor(CURSOR cursor,
+	UNIT_ATTRIBUTE Atreides_Harvestor,
+	UNIT_ATTRIBUTE Haconen_Harvestor);
 // display_system_message()
 // display_object_info()
 // display_commands()
@@ -82,10 +82,10 @@ void display_map(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 				else if (backbuf[i][j] == 'P' && 1<= i && i <= 2 && MAP_WIDTH-5 <= j && j <= MAP_WIDTH-4) {
 					printc(position_move_f(Map_Top_Left_Coord, pos), backbuf[i][j], PLATE_COLOR);
 				}
-				else if (backbuf[i][j] == '5' && i == (MAP_HEIGHT - 6) && j == 1) {
+				else if ('1' <= backbuf[i][j] && backbuf[i][j] <= '9' && i == (MAP_HEIGHT - 6) && j == 1) {
 					printc(position_move_f(Map_Top_Left_Coord, pos), backbuf[i][j], SPICE_COLOR);
 				}
-				else if (backbuf[i][j] == '5' && i == 5 && j == MAP_WIDTH - 2) {
+				else if ('1' <= backbuf[i][j] && backbuf[i][j] <= '9' && i == 5 && j == MAP_WIDTH - 2) {
 					printc(position_move_f(Map_Top_Left_Coord, pos), backbuf[i][j], SPICE_COLOR);
 				}
 				else if (backbuf[i][j] == 'R' && i == 10 && j == 7 ||
@@ -116,14 +116,52 @@ void display_map(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 }
 
 // frontbuf[][]에서 커서 위치의 문자를 색만 바꿔서 그대로 다시 출력
-void display_cursor(CURSOR cursor) {
+void display_cursor(CURSOR cursor,
+					UNIT_ATTRIBUTE Atreides_Harvestor,
+					UNIT_ATTRIBUTE Haconen_Harvestor) 
+{
 	POSITION prev = cursor.previous;
 	POSITION curr = cursor.current;
-
+	
 	char ch = frontbuf[prev.row][prev.column];
 	//이전 커서 위치에 문자를 COLOR_DEFAUKT를 출력
 	//건물의 원래 색깔을 표시할 알고리즘 필요
-	printc(position_move_f(Map_Top_Left_Coord, prev), ch, COLOR_DEFAULT);
+	if ('1' <= ch && ch <= '9') {
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, SPICE_COLOR);
+	}
+	else if (ch == 'P') {
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, PLATE_COLOR);
+	}
+	else if (ch == 'W') {
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, SAND_WORM_COLOR);
+	}
+	else if (ch == 'R') {
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, ROCK_COLOR);
+	}
+	else if (ch == 'B' && MAP_HEIGHT - 3 <= prev.row && prev.row <= MAP_HEIGHT - 2 &&
+			1 <= prev.column && prev.column <= 2) 
+	{
+		// 해당 포지션으로 가서 출력을 한다.
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, ATREIDES_COLOR);
+	}
+	else if (ch == 'B' && 1 <= prev.row && prev.row <= 2 &&
+			MAP_WIDTH - 3 <= prev.column && prev.column <= MAP_WIDTH - 2)
+	{
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, HACONEN_COLOR);
+	}
+	else if (ch == 'H' && Atreides_Harvestor.pos.row == prev.row &&
+		Atreides_Harvestor.pos.column == prev.column)
+	{
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, ATREIDES_COLOR);
+	}
+	else if (ch == 'H' && Haconen_Harvestor.pos.row == prev.row &&
+			Haconen_Harvestor.pos.column == prev.column)
+	{
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, HACONEN_COLOR);
+	}
+	else {
+		printc(position_move_f(Map_Top_Left_Coord, prev), ch, COLOR_DEFAULT);
+	}
 	//이동된 위치에 문자를 출력
 	ch = frontbuf[curr.row][curr.column];
 	printc(position_move_f(Map_Top_Left_Coord, curr), ch, CURSOR_CURRENT_COLOR);
