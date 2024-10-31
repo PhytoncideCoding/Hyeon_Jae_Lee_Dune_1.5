@@ -70,8 +70,14 @@ inline POSITION dtop(DIRECTION d) {
 	return direction_vector[d];
 }
 
+inline POSITION dtop_f_inline(DIRECTION Key) {
+	static POSITION Direction_Vector2_arr[] = { {0, 0}, {-5, 0}, {0, -5}, {0, 5}, {5, 0} };
+	return Direction_Vector2_arr[Key];
+}
+
 // p를 d 방향으로 이동시킨 POSITION
 #define position_by_arrow_move_f_mac(p, d)		(position_move_f((p), dtop(d)))
+#define position_by_arrow_move2_f_mac(p, d)		(position_move_f((p), dtop_f_inline(d)))
 
 /* ================= game data =================== */
 typedef struct {

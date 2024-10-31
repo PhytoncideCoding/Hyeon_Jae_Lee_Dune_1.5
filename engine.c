@@ -9,6 +9,7 @@
 	void intro(void);
 	void outro(void);
 	void cursor_move(DIRECTION dir);
+	void cursor_move2_f(DIRECTION dir);
 	void sample_obj_move(void);
 	POSITION sample_obj_next_position(void);
 
@@ -79,38 +80,46 @@
 		//(3) 1. 자원에 대해서 출력 2. 맵 정보에 대해서 출력 3. 이전 위치/ 현재 위치 출력
 
 		display_resource(Spice_Population);
-		display_map(map, Atreides_Harvestor, Haconen_Harvestor);
-		display_cursor(cursor, Atreides_Harvestor, Haconen_Harvestor);
+		display_map_f(map, Atreides_Harvestor, Haconen_Harvestor);
+		display_cursor_f(cursor, Atreides_Harvestor, Haconen_Harvestor);
 		while (1) {
 			// (4) loop 돌 때마다 0부터 시작해서 0.01초 마다 키 입력 확인 
 			
 			// 열거체 변수를 하나의 값으로서 사용
 			// 입력한 키가 항상저장된다.
-			KEY key = get_key();
+			KEY key1 = get_key();
+			KEY key2 = get_key();
 
 			// //매크로 함수로 방향키인지 확인
 			// 방향키 입력으로 커서가 움직인다. 
-			if (is_arrow_key_f_mac(key)) {
+			if (is_arrow_key_f_mac(key1)) {
 				//방향키에 대한 정수값 새로운 열거체로 정의 되어 들어간다.
-				cursor_move(key_to_direction_f_mac(key));
+				//좌표이동 1회
+				if (is_arrow_key_f_mac(key2)) {
+					cursor_move2_f(key_to_direction_f_mac(key2));
+				}
+				else {
+					cursor_move(key_to_direction_f_mac(key1));
+				}
 			}
 			else {
 				// 방향키 외의 입력
-				switch (key) {
+				switch (key1) {
 				case k_quit:  set_color(INTRO_OUTTRO_CONTENT); system("cls"); outro(); // 5번 입력시
 				case k_none: //0번 입력시
 				case k_undef: //6번 입력시
 				default: break;
 				}
 			}
-
+			
+		
 			// 샘플 오브젝트 동작
 			sample_obj_move();
 
 			// 화면 출력
 			display_resource(Spice_Population);
-			display_map(map, Atreides_Harvestor, Haconen_Harvestor);
-			display_cursor(cursor, Atreides_Harvestor, Haconen_Harvestor);
+			display_map_f(map, Atreides_Harvestor, Haconen_Harvestor);
+			display_cursor_f(cursor, Atreides_Harvestor, Haconen_Harvestor);
 			// 시간의 단위
 			Sleep(TICK);
 			sys_clock += 1000;
@@ -226,14 +235,27 @@
 		// 현재 커서의 위치와 방향키 벡터를 더해서 새로운 커서의 위치를 저장한다.
 		POSITION new_pos = position_by_arrow_move_f_mac(curr, dir);
 		// 커서가 #테두리 안에 위치하는 지 확인
+
 		if (1 <= new_pos.row && new_pos.row <= MAP_HEIGHT - 2 && \
 			1 <= new_pos.column && new_pos.column <= MAP_WIDTH - 2) {
-			//cursor 이전 위치와 현재 위치를 초기화 해서 display_cursor에 활용
+			//cursor 이전 위치와 현재 위치를 초기화 해서 display_cursor_f에 활용
 			cursor.previous = cursor.current;
 			cursor.current = new_pos;
 		}
 	}
 
+	void cursor_move2_f(DIRECTION dir) {
+		POSITION curr = cursor.current;
+		// 현재 커서의 위치와 방향키 벡터를 더해서 새로운 커서의 위치를 저장한다.
+		POSITION new_pos = position_by_arrow_move2_f_mac(curr, dir);
+		// 커서가 #테두리 안에 위치하는 지 확인
+		if (1 <= new_pos.row && new_pos.row <= MAP_HEIGHT - 2 && \
+			1 <= new_pos.column && new_pos.column <= MAP_WIDTH - 2) {
+			//cursor 이전 위치와 현재 위치를 초기화 해서 display_cursor_f에 활용
+			cursor.previous = cursor.current;
+			cursor.current = new_pos;
+		}
+	}
 	/* ================= sample object movement =================== */
 	POSITION sample_obj_next_position(void) {
 		// 현재 위치와 목적지를 비교해서 이동 방향 결정	

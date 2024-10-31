@@ -7,6 +7,7 @@ KEY get_key(void);
 void printc(POSITION pos, char ch, int color);
 extern void gotoxy(POSITION pos);
 void set_color(int color);
+extern void cursor_move(DIRECTION dir);
 
 #endif
 

@@ -1,10 +1,3 @@
-/*
-*  display.c:
-* 화면에 게임 정보를 출력
-* 맵, 커서, 시스템 메시지, 정보창, 자원 상태 등등
-* io.c에 있는 함수들을 사용함
-*/
-
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
@@ -24,5 +17,19 @@
 #define SPICE_COLOR 111
 #define SAND_WORM_COLOR 236
 #define ROCK_COLOR 127
+
+extern void project(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGHT][MAP_WIDTH]);
+extern void display_resource(RESOURCE resource);
+extern void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
+	UNIT_ATTRIBUTE Atreides_Harvestor,
+	UNIT_ATTRIBUTE Haconen_Harvestor);
+extern void display_cursor_f(CURSOR cursor,
+	UNIT_ATTRIBUTE Atreides_Harvestor,
+	UNIT_ATTRIBUTE Haconen_Harvestor);
+
+// display_system_message()
+// display_object_info()
+// display_commands()
+// ...
 
 #endif
