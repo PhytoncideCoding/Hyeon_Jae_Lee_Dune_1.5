@@ -17,3 +17,4 @@ extern void reset_state_window_f(POSITION State_Window_Pos, char blank_character
 extern void reset_command_window_f(POSITION Command_Window_Pos, char blank_character, int color);
 #endif
 
+
