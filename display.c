@@ -220,6 +220,7 @@ void state_window_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BU
 	}
 }
 //2-3) 명령어 선택창 출력 함수
+// 여기 추가 작업 필요
 void command_message_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Haconen_Base) {
 	//스페이스를 눌렀을 때 커서의 위치
 	POSITION Cursor_Current_Pos = cursor.current;
