@@ -33,11 +33,20 @@ LAND_ATTRIBUTE Rocks = {
 +설명: 샌드웜은 통과할수 없음\n",
 .commands_info = "명령어: 없음\n"
 };
+LAND_ATTRIBUTE Spice = {
+.Land_Position = { {MAP_HEIGHT - 6, 1}, {5, MAP_WIDTH - 2} },
+.introduce_self = "스파이스 매장지(1~9)",
+.commands_info = "명령어: 없음"
+};
+LAND_ATTRIBUTE Desert = {
+.introduce_self = "사막: 건물을 지을 수 없음"
+};
 /* ================= 건물 전역 구조체 선언 =================== */
 //아트레이디스 본진
 BUILDING_ATTRIBUTE Atreides_Base = {
 .pos = {{MAP_HEIGHT - 2, 1},{MAP_HEIGHT - 3, 1}, {MAP_HEIGHT - 2, 2}, {MAP_HEIGHT - 3, 2}},
 .introduce_self = "+건물: 아트레이디스 본진(Base)\n\
++건설비용:없음\n\
 +내구도: 50",
 .commands_info = "H: 아트레이디스 하베스터 생산\n"
 };
@@ -85,6 +94,7 @@ BUILDING_ATTRIBUTE Atreides_Shelter = {
 BUILDING_ATTRIBUTE Haconen_Base = {
 .pos = {{1, MAP_WIDTH - 2}, {1, MAP_WIDTH - 3}, {2, MAP_WIDTH - 2} , {2, MAP_WIDTH - 3}},
 .introduce_self = "건물: 하코넨 본진(Base)\n\
++건설비용:없음\n\
 내구도: 50",
 .commands_info = "H: 하코넨 하베스터 생산\n"
 };
@@ -126,8 +136,6 @@ BUILDING_ATTRIBUTE Haconen_Factory = {
 +내구도: 30",
 .commands_info = "명령어: 중전차 생산(T: Heavy Tank)\n"
 };
-
-
 /* ================= 유닛 전역 구조체 선언 =================== */
 // 아트레이디스 하베스터
 UNIT_ATTRIBUTE Atreides_Harvestor = {
@@ -136,7 +144,7 @@ UNIT_ATTRIBUTE Atreides_Harvestor = {
 .representation = 'H',
 .speed = 300,
 .next_move_time = 300, //다음에 움직일 시간
-.introduce_self = "+유닛: 아트레이디스 하베스터(F: Factory)\n\
+.introduce_self = "+유닛: 아트레이디스 하베스터\n\
 +생산비용: 5\n\
 +인구수: 5\n\
 +이동주기: 2000\n\
@@ -224,12 +232,21 @@ UNIT_ATTRIBUTE Haconen_Heavy_Tank = {
 + P: 순찰(Patrol)\n"
 };
 // 중립 샌드웜
-UNIT_ATTRIBUTE Sand_Worm[2] = {
-	{.pos = {4, 4}}, {.pos = {12, MAP_WIDTH - 10}}
+UNIT_ATTRIBUTE Sand_Worm = {
+.pos = {{4, 4}, {12, MAP_WIDTH - 10}},
+.introduce_self = "+유닛: 샌드웜(중립)\n\
++생산비용: 없음\n\
++인구수: 없음\n\
++이동주기: 2500\n\
++공격력: 무한대\n\
++공격주기: 10000\n\
++체력: 무한대\n\
++시야: 무한대",
+.commands_info = "<명령어> : 없음"
 };
 // 중립 스켈레톤 유닛 나중에 layer2로 사용 고려
 UNIT_ATTRIBUTE obj = {
-	.pos = {1, 1}, //유닛의 첫 시작 좌표
+	.pos = {{1, 1}}, //유닛의 첫 시작 좌표
 	.dest = {MAP_HEIGHT - 2, MAP_WIDTH - 2}, //최우측 하단
 	.representation = 'o',
 	.speed = 300,
@@ -348,11 +365,11 @@ void init_map_land_building_unit() {
 
 	//유닛 레이어의 유닛의 가로 위치와 세로 위치에 유닛 초기화
 	//초기 위치에 저장
-	map[1][obj.pos.row][obj.pos.column] = 'o';
-	map[1][Atreides_Harvestor.pos.row][Atreides_Harvestor.pos.column] = 'H';
-	map[1][Haconen_Harvestor.pos.row][Haconen_Harvestor.pos.column] = 'H';
-	map[1][Sand_Worm[0].pos.row][Sand_Worm[0].pos.column] = 'W';
-	map[1][Sand_Worm[1].pos.row][Sand_Worm[1].pos.column] = 'W';
+	map[1][obj.pos[0].row][obj.pos[0].column] = 'o';
+	map[1][Atreides_Harvestor.pos[0].row][Atreides_Harvestor.pos[0].column] = 'H';
+	map[1][Haconen_Harvestor.pos[0].row][Haconen_Harvestor.pos[0].column] = 'H';
+	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = 'W';
+	map[1][Sand_Worm.pos[1].row][Sand_Worm.pos[1].column] = 'W';
 }
 
 
@@ -433,7 +450,7 @@ void cursor_move2_f(DIRECTION dir) {
 POSITION sample_obj_next_position(void) {
 	// 현재 위치와 목적지를 비교해서 이동 방향 결정	
 	//obj 전역변수
-	POSITION diff = position_subtraction_f_inline(obj.dest, obj.pos);
+	POSITION diff = position_subtraction_f_inline(obj.dest, obj.pos[0]);
 	DIRECTION dir;
 
 	// 지금은 단순히 원래 자리로 왕복
@@ -450,7 +467,7 @@ POSITION sample_obj_next_position(void) {
 			POSITION new_dest = { 1, 1 };
 			obj.dest = new_dest;
 		}
-		return obj.pos;
+		return obj.pos[0];
 	}
 
 	// 가로축, 세로축 거리를 비교해서 더 먼 쪽 축으로 이동
@@ -469,14 +486,14 @@ POSITION sample_obj_next_position(void) {
 	// 다음 위치로 이동
 	// 지금은 충돌 시 아무것도 안 하는데, 
 	// 나중에는 장애물을 피해가거나 적과 전투를 하거나... 등등
-	POSITION next_pos = position_by_arrow_move_f_mac(obj.pos, dir);
+	POSITION next_pos = position_by_arrow_move_f_mac(obj.pos[0], dir);
 	if (1 <= next_pos.row && next_pos.row <= MAP_HEIGHT - 2 && \
 		1 <= next_pos.column && next_pos.column <= MAP_WIDTH - 2 && \
 		map[1][next_pos.row][next_pos.column] < 0) {
 		return next_pos;
 	}
 	else {
-		return obj.pos;  // 제자리
+		return obj.pos[0];  // 제자리
 	}
 }
 
@@ -490,10 +507,10 @@ void sample_obj_move(void) {
 
 	// 오브젝트(건물, 유닛 등)은 layer1(map[1])에 저장
 	//음수를 저장하는 이유는 프론트 버퍼에 이전 표시는 전달하지 않기 위해서
-	map[1][obj.pos.row][obj.pos.column] = -1;
+	map[1][obj.pos[0].row][obj.pos[0].column] = -1;
 	// 오브젝트 포지션에 대한 변화를 초기화
-	obj.pos = sample_obj_next_position();
-	map[1][obj.pos.row][obj.pos.column] = obj.representation;
+	obj.pos[0] = sample_obj_next_position();
+	map[1][obj.pos[0].row][obj.pos[0].column] = obj.representation;
 
 	obj.next_move_time = sys_clock + obj.speed;
 }
@@ -510,7 +527,7 @@ int main(void) {
 	init_command_message_f();
 
 	display_resource(Spice_Population);
-	display_map_f(map, Atreides_Harvestor, Haconen_Harvestor);
+	display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks);
 	display_state_window_f(state_window_arr);
 	display_system_message_w_f(system_message_arr);
 	display_command_message_w_f(command_window_arr);
@@ -532,8 +549,13 @@ int main(void) {
 			switch (key1) {
 			case k_esc: eraser_state_command_window(); break;
 			case k_space:
-				state_window_by_k_space(cursor, Atreides_Base, Haconen_Base, Atreides_Plate);
-				command_message_by_k_space(cursor, Atreides_Base, Haconen_Base);
+				state_window_by_k_space(cursor, Rocks, 
+					  Spice, Desert, Sand_Worm,
+					  Atreides_Base, Atreides_Plate, Atreides_Harvestor,
+					  Haconen_Base, Haconen_Plate, Haconen_Harvestor);
+				command_message_by_k_space(cursor, Rocks, Spice, Sand_Worm,
+					  Atreides_Base, Atreides_Plate, Atreides_Harvestor,
+					  Haconen_Base, Haconen_Plate, Haconen_Harvestor);
 				break;
 				//1) outro 함수
 			case k_quit:  set_color(INTRO_OUTTRO_CONTENT); system("cls"); outro();
@@ -544,9 +566,9 @@ int main(void) {
 		}
 		// 샘플 오브젝트 동작
 		sample_obj_move();
-		// 화면 출력
+		
 		display_resource(Spice_Population);
-		display_map_f(map, Atreides_Harvestor, Haconen_Harvestor);
+		display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks);
 		display_state_window_f(state_window_arr);
 		display_system_message_w_f(system_message_arr);
 		display_command_message_w_f(command_window_arr);

@@ -13,7 +13,6 @@ const POSITION S_W_Top_Left_Coord = { 1, MAP_WIDTH };
 const POSITION SYSTEM_Message_W_T_L_Coord = { 1 + MAP_HEIGHT, 0 };
 //명령어 창 출력 첫 시작 위치
 const POSITION Command_Message_T_L_Coord = { 1 + MAP_HEIGHT, MAP_WIDTH };
-
 //맵 버퍼링 배열
 char backbuf[MAP_HEIGHT][MAP_WIDTH] = { 0 };
 char frontbuf[MAP_HEIGHT][MAP_WIDTH] = { 0 };
@@ -54,7 +53,8 @@ void project_map_f(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGH
 }
 void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 	UNIT_ATTRIBUTE Atreides_Harvestor,
-	UNIT_ATTRIBUTE Haconen_Harvestor
+	UNIT_ATTRIBUTE Haconen_Harvestor,
+	LAND_ATTRIBUTE Rocks
 )
 {
 	project_map_f(map, backbuf);//map에 대한 정보를 2차원 배열 백버퍼에 전달
@@ -84,10 +84,10 @@ void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 				else if (backbuf[i][j] == 'R') {
 					printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], ROCK_COLOR);
 				}
-				else if (backbuf[i][j] == 'H' && Atreides_Harvestor.pos.row == i && Atreides_Harvestor.pos.column == j) {
+				else if (backbuf[i][j] == 'H' && Atreides_Harvestor.pos[0].row == i && Atreides_Harvestor.pos[0].column == j) {
 					printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], ATREIDES_COLOR);
 				}
-				else if (backbuf[i][j] == 'H' && Haconen_Harvestor.pos.row == i && Haconen_Harvestor.pos.column == j) {
+				else if (backbuf[i][j] == 'H' && Haconen_Harvestor.pos[0].row == i && Haconen_Harvestor.pos[0].column == j) {
 					printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], HACONEN_COLOR);
 				}
 				else if (backbuf[i][j] == 'W') {
@@ -133,13 +133,13 @@ void display_cursor_f(CURSOR cursor,
 	{
 		printc(position_move_f(Map_Top_Left_Coord, prev), ch, HACONEN_COLOR);
 	}
-	else if (ch == 'H' && Atreides_Harvestor.pos.row == prev.row &&
-		Atreides_Harvestor.pos.column == prev.column)
+	else if (ch == 'H' && Atreides_Harvestor.pos[0].row == prev.row &&
+		Atreides_Harvestor.pos[0].column == prev.column)
 	{
 		printc(position_move_f(Map_Top_Left_Coord, prev), ch, ATREIDES_COLOR);
 	}
-	else if (ch == 'H' && Haconen_Harvestor.pos.row == prev.row &&
-		Haconen_Harvestor.pos.column == prev.column)
+	else if (ch == 'H' && Haconen_Harvestor.pos[0].row == prev.row &&
+		Haconen_Harvestor.pos[0].column == prev.column)
 	{
 		printc(position_move_f(Map_Top_Left_Coord, prev), ch, HACONEN_COLOR);
 	}
@@ -174,21 +174,106 @@ void display_state_window_f(char state_window_arr[STATE_WINDOW_MAX_HEIGHT][STATE
 	}
 }
 //2-3) 상태 선택창 출력 함수
-void state_window_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Haconen_Base,
-	BUILDING_ATTRIBUTE Atreides_Plate)
+void state_window_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks, 
+	 LAND_ATTRIBUTE Spice, LAND_ATTRIBUTE Desert, UNIT_ATTRIBUTE Sand_Worm,
+	 BUILDING_ATTRIBUTE Atreides_Base,  BUILDING_ATTRIBUTE Atreides_Plate, 
+	 UNIT_ATTRIBUTE Atreides_Harvestor, 
+	 BUILDING_ATTRIBUTE Haconen_Base, BUILDING_ATTRIBUTE Haconen_Plate,
+	 UNIT_ATTRIBUTE Haconen_Harvestor)
 {
 	POSITION Cursor_Current_Pos = cursor.current;
 	POSITION Shift_To_State_W = { 1, 1 };
 	POSITION Before_Unit_Position = { 0, 0 };
 	char ch = frontbuf[Cursor_Current_Pos.row][Cursor_Current_Pos.column];
-
-	if (Before_Unit_Position.row != Cursor_Current_Pos.row ||
-		Before_Unit_Position.column != Cursor_Current_Pos.column)
+	static int state_count_k_space = 0;
+		
+	if (state_count_k_space >=1 && (Before_Unit_Position.row != Cursor_Current_Pos.row ||
+		Before_Unit_Position.column != Cursor_Current_Pos.column))
 	{
 		reset_state_window_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W), ' ', COLOR_DEFAULT);
 	}
-
-	if (ch == 'B') {
+	if (state_count_k_space == 0) {
+		state_count_k_space++;
+	}
+	//바위
+	if (ch == 'R') {
+		for (int i = 0; i < 11; i++) {
+			if (Rocks.Land_Position[i].row == Cursor_Current_Pos.row &&
+				Rocks.Land_Position[i].column == Cursor_Current_Pos.column) 
+			{
+				print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+					Rocks.introduce_self, COLOR_DEFAULT);
+				Before_Unit_Position.row = Rocks.Land_Position[i].row;
+				Before_Unit_Position.column = Rocks.Land_Position[i].column;
+			}
+		}
+	}
+	//스파이스
+	if ( '1' <= ch && ch <= '9') {
+		for (int i = 0; i < 2; i++) {
+			if (Spice.Land_Position[i].row == Cursor_Current_Pos.row &&
+				Spice.Land_Position[i].column == Cursor_Current_Pos.column)
+			{
+				print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+					Spice.introduce_self, COLOR_DEFAULT);
+				Before_Unit_Position.row = Spice.Land_Position[i].row;
+				Before_Unit_Position.column = Spice.Land_Position[i].column;
+			}
+		}
+	}
+	//샌드웜
+	else if (ch == 'W') {
+		for (int i = 0; i < 2; i++) {
+			if (Sand_Worm.pos[i].row == Cursor_Current_Pos.row &&
+				Sand_Worm.pos[i].column == Cursor_Current_Pos.column)
+			{
+				print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+					  Sand_Worm.introduce_self, COLOR_DEFAULT);
+				Before_Unit_Position.row = Sand_Worm.pos[i].row;
+				Before_Unit_Position.column = Sand_Worm.pos[i].column;
+			}
+		}
+	}
+	//유닛 하베스터
+	else if (ch == 'H') {
+		if (Atreides_Harvestor.pos[0].row == Cursor_Current_Pos.row &&
+			Atreides_Harvestor.pos[0].column == Cursor_Current_Pos.column)
+		{
+			print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+				Atreides_Harvestor.introduce_self, COLOR_DEFAULT);
+			Before_Unit_Position.row = Atreides_Harvestor.pos[0].row;
+			Before_Unit_Position.column = Atreides_Harvestor.pos[0].column;
+		}
+		else if (Haconen_Harvestor.pos[0].row == Cursor_Current_Pos.row &&
+			Haconen_Harvestor.pos[0].column == Cursor_Current_Pos.column)
+		{
+			print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+				Haconen_Harvestor.introduce_self, COLOR_DEFAULT);
+			Before_Unit_Position.row = Haconen_Harvestor.pos[0].row;
+			Before_Unit_Position.column = Haconen_Harvestor.pos[0].column;
+		}
+	}
+	//장판
+	else if (ch == 'P') {
+		for (int i = 0; i < 4; i++) {
+			if (Atreides_Plate.pos[i].row == Cursor_Current_Pos.row && Atreides_Plate.pos[i].column == Cursor_Current_Pos.column) {
+				print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+					Atreides_Plate.introduce_self, COLOR_DEFAULT);
+				Before_Unit_Position.row = Atreides_Plate.pos[i].row;
+				Before_Unit_Position.column = Atreides_Plate.pos[i].column;
+			}
+			else if (Haconen_Plate.pos[i].row == Cursor_Current_Pos.row &&
+				Haconen_Plate.pos[i].column == Cursor_Current_Pos.column)
+			{
+				print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+					Haconen_Plate.introduce_self, COLOR_DEFAULT);
+				Before_Unit_Position.row = Haconen_Plate.pos[i].row;
+				Before_Unit_Position.column = Haconen_Plate.pos[i].column;
+			}
+		}
+	}
+	//본진
+	else if (ch == 'B') {
 		for (int i = 0; i < 4; i++) {
 			if (Atreides_Base.pos[i].row == Cursor_Current_Pos.row && \
 				Atreides_Base.pos[i].column == Cursor_Current_Pos.column)
@@ -208,35 +293,119 @@ void state_window_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BU
 			}
 		}
 	}
-	else if (ch == 'P') {
-		for (int i = 0; i < 4; i++) {
-			if (Atreides_Plate.pos[i].row == Cursor_Current_Pos.row && Atreides_Plate.pos[i].column == Cursor_Current_Pos.column) {
-				print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
-					Atreides_Plate.introduce_self, COLOR_DEFAULT);
-				Before_Unit_Position.row = Atreides_Plate.pos[i].row;
-				Before_Unit_Position.column = Atreides_Plate.pos[i].column;
-			}
-		}
+	else {
+		print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
+			Desert.introduce_self, COLOR_DEFAULT);
 	}
 }
 //2-3) 명령어 선택창 출력 함수
-// 여기 추가 작업 필요
-void command_message_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Haconen_Base) {
-	//스페이스를 눌렀을 때 커서의 위치
+void command_message_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
+	LAND_ATTRIBUTE Spice, UNIT_ATTRIBUTE Sand_Worm,
+	BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Atreides_Plate,
+	UNIT_ATTRIBUTE Atreides_Harvestor,
+	BUILDING_ATTRIBUTE Haconen_Base, BUILDING_ATTRIBUTE Haconen_Plate,
+	UNIT_ATTRIBUTE Haconen_Harvestor)
+{
+	//스페이스를 눌렀을 때 커서의 위치 저장
 	POSITION Cursor_Current_Pos = cursor.current;
 	POSITION Shift_To_Command_W = { 1, 1 };
 
 	char ch = frontbuf[Cursor_Current_Pos.row][Cursor_Current_Pos.column];
 	POSITION Before_Unit_Position = { 0, 0 };
-
-	if (Before_Unit_Position.row != Cursor_Current_Pos.row ||
-		Before_Unit_Position.column != Cursor_Current_Pos.column)
+	//삭제하고 출력 구현
+	static int command_count_k_space = 0;
+	
+	if (command_count_k_space >= 1 && (Before_Unit_Position.row != Cursor_Current_Pos.row ||
+		Before_Unit_Position.column != Cursor_Current_Pos.column))
 	{
 		reset_command_window_f(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
 			' ', COLOR_DEFAULT);
 	}
+	if (command_count_k_space == 0) {
+		command_count_k_space++;
+	}
 
-	if (ch == 'B') {
+	//바위
+	if (ch == 'R') {
+		for (int i = 0; i < 11; i++) {
+			if (Rocks.Land_Position[i].row == Cursor_Current_Pos.row &&
+				Rocks.Land_Position[i].column == Cursor_Current_Pos.column)
+			{
+				print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+					Rocks.commands_info, COLOR_DEFAULT);
+				Before_Unit_Position.row = Rocks.Land_Position[i].row;
+				Before_Unit_Position.column = Rocks.Land_Position[i].column;
+			}
+		}
+	}
+	//스파이스
+	if ('1' <= ch && ch <= '9') {
+		for (int i = 0; i < 2; i++) {
+			if (Spice.Land_Position[i].row == Cursor_Current_Pos.row &&
+				Spice.Land_Position[i].column == Cursor_Current_Pos.column)
+			{
+				print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+					Spice.commands_info, COLOR_DEFAULT);
+				Before_Unit_Position.row = Spice.Land_Position[i].row;
+				Before_Unit_Position.column = Spice.Land_Position[i].column;
+			}
+		}
+	}
+	//장판
+	else if (ch == 'P') {
+		for (int i = 0; i < 4; i++) {
+			if (Atreides_Plate.pos[i].row == Cursor_Current_Pos.row &&
+				Atreides_Plate.pos[i].column == Cursor_Current_Pos.column)
+			{
+				print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+					Atreides_Plate.commands_info, COLOR_DEFAULT);
+				Before_Unit_Position.row = Atreides_Plate.pos[i].row;
+				Before_Unit_Position.column = Atreides_Plate.pos[i].column;
+			}
+			else if (Haconen_Plate.pos[i].row == Cursor_Current_Pos.row &&
+				Haconen_Plate.pos[i].column == Cursor_Current_Pos.column)
+			{
+				print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+					Haconen_Plate.commands_info, COLOR_DEFAULT);
+				Before_Unit_Position.row = Haconen_Plate.pos[i].row;
+				Before_Unit_Position.column = Haconen_Plate.pos[i].column;
+			}
+		}
+	}
+	//샌드웜
+	else if (ch == 'W') {
+		for (int i = 0; i < 2; i++) {
+			if (Sand_Worm.pos[i].row == Cursor_Current_Pos.row &&
+				Sand_Worm.pos[i].column == Cursor_Current_Pos.column)
+			{
+				print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+					Sand_Worm.commands_info, COLOR_DEFAULT);
+				Before_Unit_Position.row = Sand_Worm.pos[i].row;
+				Before_Unit_Position.column = Sand_Worm.pos[i].column;
+			}
+		}
+	}
+	//유닛: 하베스터
+	else if (ch == 'H') {
+		if (Atreides_Harvestor.pos[0].row == Cursor_Current_Pos.row &&
+			Atreides_Harvestor.pos[0].column == Cursor_Current_Pos.column)
+		{
+			print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+				Atreides_Harvestor.commands_info, COLOR_DEFAULT);
+			Before_Unit_Position.row = Atreides_Harvestor.pos[0].row;
+			Before_Unit_Position.column = Atreides_Harvestor.pos[0].column;
+		}
+		else if (Haconen_Harvestor.pos[0].row == Cursor_Current_Pos.row &&
+			Haconen_Harvestor.pos[0].column == Cursor_Current_Pos.column)
+		{
+			print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
+				Haconen_Harvestor.commands_info, COLOR_DEFAULT);
+			Before_Unit_Position.row = Haconen_Harvestor.pos[0].row;
+			Before_Unit_Position.column = Haconen_Harvestor.pos[0].column;
+		}
+	}
+	// 본진
+	else if (ch == 'B') {
 		for (int i = 0; i < 4; i++) {
 
 			if (Atreides_Base.pos[i].row == Cursor_Current_Pos.row && \
@@ -247,7 +416,7 @@ void command_message_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base,
 				Before_Unit_Position.row = Atreides_Base.pos[i].row;
 				Before_Unit_Position.column = Atreides_Base.pos[i].column;
 			}
-			else if (Haconen_Base.pos[i].row == Cursor_Current_Pos.row && \
+			else if (Haconen_Base.pos[i].row == Cursor_Current_Pos.row &&
 				Haconen_Base.pos[i].column == Cursor_Current_Pos.column)
 			{
 				print_command_message_info(position_move_f(Command_Message_T_L_Coord, Shift_To_Command_W),
@@ -256,7 +425,8 @@ void command_message_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base,
 				Before_Unit_Position.column = Haconen_Base.pos[i].column;
 			}
 		}
-	}
+	}	
+
 }
 void eraser_state_command_window(void) {
 	POSITION Shift_To_State_W = { 1, 1 };

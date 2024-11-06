@@ -25,7 +25,8 @@ extern void display_resource(RESOURCE resource);
 extern void project_map_f(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGHT][MAP_WIDTH]);
 extern void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 	UNIT_ATTRIBUTE Atreides_Harvestor,
-	UNIT_ATTRIBUTE Haconen_Harvestor
+	UNIT_ATTRIBUTE Haconen_Harvestor, 
+	LAND_ATTRIBUTE Rocks
 );
 
 // 1) 상태창 직사각형 출력 함수 선언
@@ -45,9 +46,19 @@ extern void display_cursor_f(CURSOR cursor,
 	UNIT_ATTRIBUTE Atreides_Harvestor,
 	UNIT_ATTRIBUTE Haconen_Harvestor);
 // 2) 스페이스 입력시 지형, 건물, 유닛별 상태 선택창 출력 함수 선언
-void state_window_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Haconen_Base, BUILDING_ATTRIBUTE Atreides_Plate);
+void state_window_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks, 
+	 LAND_ATTRIBUTE Spice, LAND_ATTRIBUTE Desert, UNIT_ATTRIBUTE Sand_Worm,
+	 BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Atreides_Plate,
+	 UNIT_ATTRIBUTE Atreides_Harvestor, 
+	 BUILDING_ATTRIBUTE Haconen_Base, BUILDING_ATTRIBUTE Haconen_Plate,
+	 UNIT_ATTRIBUTE Haconen_Harvestor);
 // 2) 명령어 선택창 출력 함수 선언
-void command_message_by_k_space(CURSOR cursor, BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Haconen_Base);
+void command_message_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
+	 LAND_ATTRIBUTE Spice, UNIT_ATTRIBUTE Sand_Worm,
+	 BUILDING_ATTRIBUTE Atreides_Base, BUILDING_ATTRIBUTE Atreides_Plate,
+	 UNIT_ATTRIBUTE Atreides_Harvestor,
+	 BUILDING_ATTRIBUTE Haconen_Base, BUILDING_ATTRIBUTE Haconen_Plate,
+	 UNIT_ATTRIBUTE Haconen_Harvestor);
 // 2) ESC입력시 선택 취소 기능 함수 선언
 void eraser_state_command_window(void);
 #endif

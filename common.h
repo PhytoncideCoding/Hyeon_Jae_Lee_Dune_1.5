@@ -17,7 +17,8 @@
 
 #define STATE_WINDOW_MAX_HEIGHT 18
 #define STATE_WINDOW_MAX_WIDTH 50
-// 배열 크기에 따라 gotoxy()함수가 제대로 작동하지 않을 수 있다. SetConsoleCursorPosition()함수의 특성
+// 배열 크기에 따라 gotoxy()함수가 제대로 작동하지 않을 수 있다.
+// SetConsoleCursorPosition()함수의 특성
 #define SYSTEM_MESSAGE_W_HEIGHT 10
 #define SYSTEM_MESSAGE_W_WIDTH 60
 
@@ -100,12 +101,12 @@ typedef struct {
 //유닛 구조체 선언
 typedef
 struct unit_attribute_t {
-	POSITION pos;		// 현재 위치(position)
-	POSITION dest;		// 목적지(destination)
-	char representation;			// 화면에 표시할 문자
+	POSITION pos[2];		 // 현재 위치(position)
+	POSITION dest;		 // 목적지(destination)
+	char representation; // 화면에 표시할 문자
 	int speed;
-	int move_period;	// '몇 ms마다 한 칸 움직이는지'를 뜻함
-	int next_move_time;	// 다음에 움직일 시간
+	int move_period;	 // '몇 ms마다 한 칸 움직이는지'를 뜻함
+	int next_move_time;	 // 다음에 움직일 시간
 	char introduce_self[(STATE_WINDOW_MAX_WIDTH - 2) * (STATE_WINDOW_MAX_HEIGHT - 2)];
 	char commands_info[(COMMAND_WINDOW_WIDTH - 2) * (COMMAND_WINDOW_HEIGHT - 2)];
 } UNIT_ATTRIBUTE;
