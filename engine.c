@@ -1,13 +1,66 @@
-﻿#include <stdlib.h>
+﻿/* ================= 설명 =================== */ 
+//engine.c
+//1) 게임 시작 화면 구현: void intro
+//1) 게임 종료 화면 구현: void outro
+//1) 상태창 직사각형 구현: void init_map_land_building_unit
+//1) 상태 정보 창 초기화: void init_state_window_f
+//1) 시스템 메세지 창 초기화: void init_system_message_f
+//1) 명령어 메세지 창 초기화: void init_command_message_f
+//2-1) 방향 키에 따라 커서의 이동 기능 구현: void cursor_move
+//2-2) 더블 방향키 방향에 따라 이동하는 커서 구현: void cursor_move2_f
+//+@ 추가 기능 구현: 더블 방향키 입력시 범위 벗어나는 경우 각 방향의 최대한 끝으로 위치하게 조정 기능 추가하였습니다.
+//3-1) 거리를 구하는 함수 double distance_by_position_f
+//3-1) 샌드웜과의 최단 거리를 샌드웜의 목적지로 구현하는 함수 POSITION next_position_sand_worm_f
+//3-1) Sand_Worm의 움직임 구현 void sand_worm_move
+//display.c
+//1) 자원 상태 출력 함수 void display_resource
+//1) 맴 버퍼링 함수 void project_map_f
+//1) 맵 출력 함수 void display_map_f
+//1) 상태창 직사각형 버퍼링 함수 void project_state_window_f
+//1) 상태창 직사각형 출력 함수 void display_state_window_f
+//1) 시스템 메시지 직사각형 버퍼링 함수 void project_system_message_w_f
+//1) 시스템 메세지 직사각형 출력 함수 void display_system_message_w_f
+//1) 명령어 직사각형 버퍼링 함수 void project_command_message_w_f
+//1) 명령어 직사각형 출력 함수 void display_command_message_w_f
+//2-1) 커서의 이동을 반영하는 커서 출력 함수 void display_cursor_f
+//2-3) 선택에 의한 상태창 출력 함수 void state_window_by_k_space
+//2-3) 선택에 의한 명령어 출력 함수 void command_message_by_k_space
+//2-4) 취소키 입력으로 상태창, 명령어 창 비우는 함수 void eraser_state_command_window
+//io.c
+//공통)좌표 이동함수 void gotoxy
+//공통) 글 배경, 글 색상 변경함수 void set_color
+//공통) 원하는 좌표로 이동해서 원하는 색상으로 문자 출력 함수 void printc
+//2-1) 방향키 입력받는 함수 KEY get_key
+//2-3) 선택에 의한 상태 문자열 출력 함수 void print_state_info_f
+//2-3) 선택에 의한 명령어 문자열 출력 함수 void print_command_message_info
+//2-3) 다른 오브젝트 선택 시 기존 상태창 문자열 삭제하는 함수 void reset_state_window_f
+//2-3) 다른 오브젝트 선택 시 기존 명령어 창 문자열 삭제하는 함수 void reset_command_window_f
+//common.h
+// 공통: 두 좌표의 합을 구하는 inline 함수 inline POSITION position_move_f
+// 공통: 두 좌표의 차를 구하는 inline 함수 inline POSITION position_subtraction_f_inline
+// 2-1) 방향키인지 확인하는 매크로 함수 is_arrow_key_f_mac
+// 2-1) 화살표 '키'(KEY)를 '방향'(DIRECTION)으로 변환하는 매크로함수 key_to_direction_f_mac
+// 2-1) 방향키 1회 입력을 POSITION 벡터로 변환해서 좌표를 연산할 준비를 도와주는 함수
+// dtop
+// 2-2) 더블 방향키 입력을 POSITION 벡터로 변환해서 좌표를 연산할 준비를 도와주는 함수
+// dtop_f_inline
+// 2-1) 위치 벡터p를 1회 키 입력 방향 벡터d 와 더하는 매크로 함수
+//position_by_arrow_move_f_mac
+// 2-2) 위치 벡터p를 2회 키 입력 방향 벡터d 와 더하는 매크로 함수
+//position_by_arrow_move2_f_mac
+
+
+/* ================= header part =================== */
+#include <stdlib.h>
 #include <time.h>
 #include <assert.h>
 #include "common.h"
 #include "io.h"
 #include "display.h"
 
-/* ================= 전체 시간 전역변수 선언 =================== */
+/* ================= 전체 시간 전역변수 초기화 =================== */
 int sys_clock = 0;
-/* ================= 화면 표시 전역 배열 선언 =================== */
+/* ================= 화면 표시 전역 배열 초기화 =================== */
 //map
 char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH] = { 0 };
 //상태창
@@ -16,16 +69,18 @@ char state_window_arr[STATE_WINDOW_MAX_HEIGHT][STATE_WINDOW_MAX_WIDTH] = { 0 };
 char system_message_arr[SYSTEM_MESSAGE_W_HEIGHT][SYSTEM_MESSAGE_W_WIDTH] = { 0 };
 //명령창
 char command_window_arr[COMMAND_WINDOW_HEIGHT][COMMAND_WINDOW_WIDTH] = { 0 };
-/* ================= 커서 위치 전역구조체 선언 =================== */
+/* ================= 커서 위치 전역구조체 초기화 =================== */
 CURSOR cursor = { { 1, 1 }, {1, 1} };
-/* ================= 자원 전역 구조체 선언 =================== */
+/* ================= 자원 전역 구조체 초기화 =================== */
+// 자원 구조체 초기화
 RESOURCE Spice_Population = {
 	.spice = 0,
 	.spice_max = 0,
 	.population = 0,
 	.population_max = 0
 };
-/* ================= 지형 전역 구조체 선언 =================== */
+/* ================= 지형 전역 구조체 초기화 =================== */
+//바위 구조체 초기화
 LAND_ATTRIBUTE Rocks = {
 .Land_Position = {{10, 7}, {4, 14}, {4, 15}, {5, 14}, {5, 15}, {10, 27},
 				  {10, 28}, {11, 27}, {11, 28}, {7, 50}, {14, 42}},
@@ -33,17 +88,19 @@ LAND_ATTRIBUTE Rocks = {
 +설명: 샌드웜은 통과할수 없음\n",
 .commands_info = "명령어: 없음\n"
 };
+//스파이스 구조체 초기화
 LAND_ATTRIBUTE Spice = {
 .Land_Position = { {MAP_HEIGHT - 6, 1}, {5, MAP_WIDTH - 2} },
 .introduce_self = "스파이스 매장지(1~9)",
 .commands_info = "명령어: 없음"
 };
+//사막 구조체 초기화
 LAND_ATTRIBUTE Desert = {
 .introduce_self = "사막: 건물을 지을 수 없음",
 .commands_info = "명령어: 없음"
 };
-/* ================= 건물 전역 구조체 선언 =================== */
-//아트레이디스 본진
+/* ================= 아트레이디스 건물 전역 구조체 초기화 =================== */
+//아트레이디스 본진 초기화
 BUILDING_ATTRIBUTE Atreides_Base = {
 .pos = {{MAP_HEIGHT - 2, 1},{MAP_HEIGHT - 3, 1}, {MAP_HEIGHT - 2, 2}, {MAP_HEIGHT - 3, 2}},
 .introduce_self = "+건물: 아트레이디스 본진(Base)\n\
@@ -51,7 +108,7 @@ BUILDING_ATTRIBUTE Atreides_Base = {
 +내구도: 50",
 .commands_info = "H: 아트레이디스 하베스터 생산\n"
 };
-//아트레이디스 장판
+//아트레이디스 장판 초기화
 BUILDING_ATTRIBUTE Atreides_Plate = {
 .pos = {{MAP_HEIGHT - 2, 3},{MAP_HEIGHT - 3, 3}, {MAP_HEIGHT - 2, 4}, {MAP_HEIGHT - 3, 4}},
 .introduce_self = "+건물: 아트레이디스 장판(P:Plate)\n\
@@ -61,6 +118,7 @@ BUILDING_ATTRIBUTE Atreides_Plate = {
 ",
 .commands_info = "명령어: 없음\n"
 };
+//아트레이디스 숙소 초기화
 BUILDING_ATTRIBUTE Atreides_Dormitory = {
 .introduce_self = "+건물: 아트레이디스 숙소(D: Dormitory)\n\
 +설명: 인구 최대치 증가(10)\n\
@@ -68,6 +126,7 @@ BUILDING_ATTRIBUTE Atreides_Dormitory = {
 +내구도: 10",
 .commands_info = "명령어: 없음\n"
 };
+//아트레이디스 창고 초기화
 BUILDING_ATTRIBUTE Atreides_Garage = {
 .introduce_self = "+건물: 아트레이디스 창고(D: Dormitory)\n\
 +설명: 스페이스 보관 최대치 증가(10)\n\
@@ -75,7 +134,7 @@ BUILDING_ATTRIBUTE Atreides_Garage = {
 +내구도: 10",
 .commands_info = "명령어: 없음\n"
 };
-//아트레이디스 병영
+//아트레이디스 병영 초기화
 BUILDING_ATTRIBUTE Atreides_Barracks = {
 .introduce_self = "+건물: 아트레이디스 병영(D: Dormitory)\n\
 +설명: 보병생산\n\
@@ -83,7 +142,7 @@ BUILDING_ATTRIBUTE Atreides_Barracks = {
 +내구도: 20",
 .commands_info = "명령어: 보병생산(S:Soldier)\n"
 };
-//아트레이디스 은신처
+//아트레이디스 은신처 초기화
 BUILDING_ATTRIBUTE Atreides_Shelter = {
 .introduce_self = "+건물: 아트레이디스 은신처(S: Shelter)\n\
 +설명: 특수유닛 생산\n\
@@ -91,7 +150,8 @@ BUILDING_ATTRIBUTE Atreides_Shelter = {
 +내구도: 30",
 .commands_info = "명령어: 프레멘 생산(F: Fremen)\n"
 };
-//하코넨 본진
+/* ================= 하코넨 건물 전역 구조체 선언 =================== */
+//하코넨 본진 초기화
 BUILDING_ATTRIBUTE Haconen_Base = {
 .pos = {{1, MAP_WIDTH - 2}, {1, MAP_WIDTH - 3}, {2, MAP_WIDTH - 2} , {2, MAP_WIDTH - 3}},
 .introduce_self = "건물: 하코넨 본진(Base)\n\
@@ -99,7 +159,7 @@ BUILDING_ATTRIBUTE Haconen_Base = {
 내구도: 50",
 .commands_info = "H: 하코넨 하베스터 생산\n"
 };
-//하코넨 장판
+//하코넨 장판 초기화
 BUILDING_ATTRIBUTE Haconen_Plate = {
 .pos = {{1, MAP_WIDTH - 5}, {1, MAP_WIDTH - 4}, {2, MAP_WIDTH - 5} , {2, MAP_WIDTH - 4}},
 .introduce_self = "+건물: 하코넨 장판(P:Plate)\n\
@@ -109,6 +169,7 @@ BUILDING_ATTRIBUTE Haconen_Plate = {
 ",
 .commands_info = "명령어: 없음"
 };
+//하코넨 숙소 초기화
 BUILDING_ATTRIBUTE Haconen_Dormitory = {
 .introduce_self = "+건물: 하코넨 숙소(D: Dormitory)\n\
 +설명: 인구 최대치 증가(10)\n\
@@ -116,6 +177,7 @@ BUILDING_ATTRIBUTE Haconen_Dormitory = {
 +내구도: 10",
 .commands_info = "명령어: 없음\n"
 };
+//하코넨 창고 초기화
 BUILDING_ATTRIBUTE Haconen_Garage = {
 .introduce_self = "+건물: 하코넨 창고(D: Dormitory)\n\
 +설명: 스페이스 보관 최대치 증가(10)\n\
@@ -123,6 +185,7 @@ BUILDING_ATTRIBUTE Haconen_Garage = {
 +내구도: 10",
 .commands_info = "명령어: 없음\n"
 };
+//하코넨 투기장 초기화
 BUILDING_ATTRIBUTE Haconen_Arena = {
 .introduce_self = "+건물: 하코넨 투기장(A: Arena)\n\
 +설명: 투사 생산\n\
@@ -130,6 +193,7 @@ BUILDING_ATTRIBUTE Haconen_Arena = {
 +내구도: 15",
 .commands_info = "명령어: 투사생산(F: Fighter)\n"
 };
+//하코넨 공장 초기화
 BUILDING_ATTRIBUTE Haconen_Factory = {
 .introduce_self = "+건물: 하코넨 공장(F: Factory)\n\
 +설명: 특수유닛 생산\n\
@@ -137,8 +201,8 @@ BUILDING_ATTRIBUTE Haconen_Factory = {
 +내구도: 30",
 .commands_info = "명령어: 중전차 생산(T: Heavy Tank)\n"
 };
-/* ================= 유닛 전역 구조체 선언 =================== */
-// 아트레이디스 하베스터
+/* ================= 아트레이디스 유닛 전역 구조체 초기화 =================== */
+// 아트레이디스 하베스터 초기화
 UNIT_ATTRIBUTE Atreides_Harvestor = {
 .pos = {MAP_HEIGHT - 4, 1}, //유닛의 첫 시작 좌표
 .dest = {MAP_HEIGHT - 2, MAP_WIDTH - 2}, //최우측 하단
@@ -157,7 +221,7 @@ UNIT_ATTRIBUTE Atreides_Harvestor = {
 + H: Harvest\n\
 + M: Move\n"
 };
-//아트레이디스 프레멘
+//아트레이디스 프레멘 초기화
 UNIT_ATTRIBUTE Atreides_Fremen = {
 .introduce_self = "+유닛: 아트레이디스 프레멘\n\
 +생산비용: 5\n\
@@ -171,7 +235,7 @@ UNIT_ATTRIBUTE Atreides_Fremen = {
 + M: 이동(Move)\n\
 + P: 순찰(Patrol)\n"
 };
-//아트레이디스 보병
+//아트레이디스 보병 초기화
 UNIT_ATTRIBUTE Atreides_Solider = {
 .introduce_self = "+유닛: 아트레이디스 보병\n\
 +생산비용: 1\n\
@@ -185,7 +249,8 @@ UNIT_ATTRIBUTE Atreides_Solider = {
 + M: 이동(Move)\n\
 + P: 순찰(Patrol)\n"
 };
-// 하코넨 하베스터
+/* ================= 하코넨 유닛 전역 구조체 초기화 =================== */ 
+// 하코넨 하베스터 초기화
 UNIT_ATTRIBUTE Haconen_Harvestor = {
 .pos = {3, MAP_WIDTH - 2}, //유닛의 첫 시작 좌표
 .dest = {MAP_HEIGHT - 2, MAP_WIDTH - 2}, //최우측 하단
@@ -204,7 +269,7 @@ UNIT_ATTRIBUTE Haconen_Harvestor = {
 + H: Harvest\n\
 + M: Move\n"
 };
-//하코넨 투사
+//하코넨 투사 초기화
 UNIT_ATTRIBUTE Haconen_Fighter = {
 .introduce_self = "+유닛: 하코넨 투사\n\
 +생산비용: 1\n\
@@ -218,9 +283,9 @@ UNIT_ATTRIBUTE Haconen_Fighter = {
 + M: 이동(Move)\n\
 + P: 순찰(Patrol)\n"
 };
-//하코넨 투사
+//하코넨 중전차 초기화
 UNIT_ATTRIBUTE Haconen_Heavy_Tank = {
-.introduce_self = "+유닛: 하코넨 투사\n\
+.introduce_self = "+유닛: 하코넨 중전차\n\
 +생산비용: 12\n\
 +인구수: 5\n\
 +이동주기: 3000\n\
@@ -232,6 +297,7 @@ UNIT_ATTRIBUTE Haconen_Heavy_Tank = {
 + M: 이동(Move)\n\
 + P: 순찰(Patrol)\n"
 };
+/* ================= 중립 유닛 구조체 초기화 =================== */
 // 중립 샌드웜
 UNIT_ATTRIBUTE Sand_Worm = {
 .pos = {{4, 4}, {12, MAP_WIDTH - 10}},
@@ -249,7 +315,7 @@ UNIT_ATTRIBUTE Sand_Worm = {
 +시야: 무한대",
 .commands_info = "<명령어> : 없음"
 };
-// 중립 스켈레톤 유닛 나중에 layer2로 사용 고려
+// 중립 스켈레톤 유닛 layer2로 사용 고려
 UNIT_ATTRIBUTE obj = {
 	.pos = {{1, 1}}, //유닛의 첫 시작 좌표
 	.dest = {MAP_HEIGHT - 2, MAP_WIDTH - 2}, //최우측 하단
@@ -258,26 +324,26 @@ UNIT_ATTRIBUTE obj = {
 	.next_move_time = 300 //다음에 움직일 시간
 };
 
-/* ================= 화면 초기화 함수 선언 =================== */
+/* ================= 화면 초기화 함수 선언부 =================== */
 void init_map_land_building_unit(void);
 void init_state_window_f(void);
 void init_system_message_f(void);
 void init_command_message_f(void);
-/* ================= 시작, 종료 화면 표시 함수 선언 =================== */
+/* ================= 시작, 종료 화면 표시 함수 선언부 =================== */
 void intro(void);
 void outro(void);
-/* ================= 커서 이동 제어 함수 선언=================== */
+/* ================= 커서 이동 제어 함수 선언부=================== */
 void cursor_move(DIRECTION dir);
 void cursor_move2_f(DIRECTION dir);
-/* ================= 유닛 이동 제어 함수 선언=================== */
+/* ================= 유닛 이동 제어 함수 선언부=================== */
+//스켈레톤 obj
 POSITION sample_obj_next_position(void);
 void sample_obj_move(void);
-
+//샌드웜
 double distance_by_position_f(POSITION p1, POSITION p2);
 POSITION next_position_sand_worm_f(void);
 void sand_worm_move(void);
-
-/* ================= 1)인트로 함수=================== */
+/* ================= 1) 화면 배치:인트로 함수=================== */
 void intro(void) {
 	set_color(INTRO_OUTTRO_TITLE);
 	printf("++++++++++++++++<    DUNE 1.5     >++++++++++++++++++\n");
@@ -310,13 +376,13 @@ void outro(void) {
 	exit(0);
 }
 /* ================= 1)유닛, 빌딩, 지형 초기화 함수=================== */
-void init_map_land_building_unit() {
-	// layer 0(map[0])에 지형 생성
+void init_map_land_building_unit(void) {
+	//맨 위, 맨 아래 part
 	for (int i = 0; i < MAP_WIDTH; i++) {
 		map[0][0][i] = '#'; //상단과 하단 밑줄 표시
 		map[0][MAP_HEIGHT - 1][i] = '#';
 	}
-
+	// Rocks 표시
 	for (int k = 0; k < 11; k++) {
 		int i = Rocks.Land_Position[k].row;
 		int j = Rocks.Land_Position[k].column;
@@ -324,10 +390,11 @@ void init_map_land_building_unit() {
 	}
 
 	for (int i = 1; i < MAP_HEIGHT - 1; i++) {
+		//직사각형의 세로 부분
 		map[0][i][0] = '#';
 		map[0][i][MAP_WIDTH - 1] = '#';
 		for (int j = 1; j < MAP_WIDTH - 1; j++) {
-			//아트레이디스 본진 건물
+			//아트레이디스 본진
 			if (MAP_HEIGHT - 3 <= i && i <= MAP_HEIGHT - 2 && j >= 1 && j <= 2) {
 				map[0][i][j] = 'B';
 			}
@@ -335,14 +402,6 @@ void init_map_land_building_unit() {
 			else if (1 <= i && i <= 2 && MAP_WIDTH - 3 <= j && j <= MAP_WIDTH - 2) {
 				map[0][i][j] = 'B';
 			}
-			/*	else if ( i == 10 && j == 7 ||
-					  4 <= i && i<= 5 && 14 <= j && j <= 15 ||
-					  10 <= i && i <= 11 && 27 <= j && j <= 28||
-					  i == 7 && j == 50 ||
-					  i == 14 && j == 42)
-			{
-				map[0][i][j] = 'R';
-			}*/
 			//아트레이디스 기본장판
 			else if (MAP_HEIGHT - 3 <= i && i <= MAP_HEIGHT - 2 && 3 <= j && j <= 4) {
 				map[0][i][j] = 'P';
@@ -359,33 +418,38 @@ void init_map_land_building_unit() {
 			else if (i == 5 && j == MAP_WIDTH - 2) {
 				map[0][i][j] = '5';
 			}
+			//사막 지형
 			else if (map[0][i][j] == '\0') {
 				map[0][i][j] = ' ';
 			}
 
 		}
 	}
-	// layer 1의 기본값을 -
+	//layer 1의 기본값을 -1로 설정: map 버퍼링 처리에 사용
 	for (int i = 0; i < MAP_HEIGHT; i++) {
 		for (int j = 0; j < MAP_WIDTH; j++) {
 			map[1][i][j] = -1;
 		}
 	}
-
-	//유닛 레이어의 유닛의 가로 위치와 세로 위치에 유닛 초기화
-	//초기 위치에 저장
+	//layer1의 유닛들 표시
+	//스켈레톤
 	map[1][obj.pos[0].row][obj.pos[0].column] = 'o';
+	//아트레이디스 하베스터
 	map[1][Atreides_Harvestor.pos[0].row][Atreides_Harvestor.pos[0].column] = 'H';
+	//하코넨 하베스터
 	map[1][Haconen_Harvestor.pos[0].row][Haconen_Harvestor.pos[0].column] = 'H';
+	//샌드웜
 	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = 'W';
 	map[1][Sand_Worm.pos[1].row][Sand_Worm.pos[1].column] = 'W';
 }
-//상태 정보 창 초기화
+//1) 상태 정보 창 초기화
 void init_state_window_f(void) {
+	//윗변, 아래 변
 	for (int i = 0; i < STATE_WINDOW_MAX_WIDTH; i++) {
-		state_window_arr[0][i] = '#'; //상단과 하단 밑줄 표시
+		state_window_arr[0][i] = '#';
 		state_window_arr[STATE_WINDOW_MAX_HEIGHT - 1][i] = '#';
 	}
+	//좌측변, 우측변
 	for (int i = 1; i < STATE_WINDOW_MAX_HEIGHT - 1; i++) {
 		state_window_arr[i][0] = '#';
 		state_window_arr[i][STATE_WINDOW_MAX_WIDTH - 1] = '#';
@@ -394,12 +458,14 @@ void init_state_window_f(void) {
 		}
 	}
 }
-// 시스템 메세지 창 초기화
+//1) 시스템 메세지 창 초기화
 void init_system_message_f(void) {
+	//윗변, 아래 변
 	for (int i = 0; i < SYSTEM_MESSAGE_W_WIDTH; i++) {
 		system_message_arr[0][i] = '#'; //상단과 하단 밑줄 표시
 		system_message_arr[SYSTEM_MESSAGE_W_HEIGHT - 1][i] = '#';
 	}
+	//좌측변, 우측변
 	for (int i = 1; i < SYSTEM_MESSAGE_W_HEIGHT - 1; i++) {
 		system_message_arr[i][0] = '#';
 		system_message_arr[i][SYSTEM_MESSAGE_W_WIDTH - 1] = '#';
@@ -408,12 +474,14 @@ void init_system_message_f(void) {
 		}
 	}
 }
-// 명령어 메세지 창 초기화
+//1) 명령어 메세지 창 초기화
 void init_command_message_f(void) {
+	//윗변, 아랫변
 	for (int i = 0; i < COMMAND_WINDOW_WIDTH; i++) {
 		command_window_arr[0][i] = '#';
 		command_window_arr[COMMAND_WINDOW_HEIGHT - 1][i] = '#';
 	}
+	//좌측변, 우측변
 	for (int i = 1; i < COMMAND_WINDOW_HEIGHT - 1; i++) {
 		command_window_arr[i][0] = '#';
 		command_window_arr[i][COMMAND_WINDOW_WIDTH - 1] = '#';
@@ -422,16 +490,13 @@ void init_command_message_f(void) {
 		}
 	}
 }
-//===================================커서 이동 함수================================//
-// 1. 새로운 위치가 영역으로 표시된 내부 영역 인지 확인
-// 2. 지정한 방향으로 커서 이동
+//2) 방향키에 따라 이동하는 커서 구현 
 void cursor_move(DIRECTION dir) {
 	//현재 커서의 위치
 	POSITION curr = cursor.current;
-	// 현재 커서의 위치와 방향키 벡터를 더해서 새로운 커서의 위치를 저장한다.
+	// 현재 커서의 위치와 방향키 벡터를 더해서 새로운 커서의 위치 저장
 	POSITION new_pos = position_by_arrow_move_f_mac(curr, dir);
-	// 커서가 #테두리 안에 위치하는 지 확인
-
+	// 커서가 테두리 안에 위치하는 지 확인
 	if (1 <= new_pos.row && new_pos.row <= MAP_HEIGHT - 2 && \
 		1 <= new_pos.column && new_pos.column <= MAP_WIDTH - 2) {
 		//cursor 이전 위치와 현재 위치를 초기화 해서 display_cursor_f에 활용
@@ -439,7 +504,7 @@ void cursor_move(DIRECTION dir) {
 		cursor.current = new_pos;
 	}
 }
-
+//2) 더블 방향키 방향에 따라 이동하는 커서 구현
 void cursor_move2_f(DIRECTION dir) {
 	POSITION curr = cursor.current;
 	// 현재 커서의 위치와 방향키 벡터를 더해서 새로운 커서의 위치를 저장한다.
@@ -451,22 +516,27 @@ void cursor_move2_f(DIRECTION dir) {
 		cursor.previous = cursor.current;
 		cursor.current = new_pos;
 	}
+	// 커서가 테두리 안에 위치 하지 않으면
 	else {
+		// 상단 방향 상단의 최단한 가능한 끝으로
 		if (dir == 1) {
 			new_pos.row = 1;
 			cursor.previous = cursor.current;
 			cursor.current = new_pos;
 		}
+		// 좌측 방향 좌측의 최대한 가능한 끝으로
 		else if (dir == 2) {
 			new_pos.column = 1;
 			cursor.previous = cursor.current;
 			cursor.current = new_pos;
 		}
+		// 우측 방향 우측의 최대한 가능한 끝으로
 		else if (dir == 3) {
 			new_pos.column = MAP_WIDTH - 2;
 			cursor.previous = cursor.current;
 			cursor.current = new_pos;
 		}
+		// 하단 방향 하단의 최대한 가능한 끝으로
 		else if (dir == 4) {
 			new_pos.row = MAP_HEIGHT - 2;
 			cursor.previous = cursor.current;
@@ -474,7 +544,7 @@ void cursor_move2_f(DIRECTION dir) {
 		}
 	}
 }
-/* ================= sample object movement =================== */
+// 스켈레톤 유닛 이동 
 POSITION sample_obj_next_position(void) {
 	// 현재 위치와 목적지를 비교해서 이동 방향 결정	
 	//obj 전역변수
@@ -516,7 +586,7 @@ POSITION sample_obj_next_position(void) {
 		return obj.pos[0];  // 제자리
 	}
 }
-
+// 스켈레톤 유닛 이동
 void sample_obj_move(void) {
 	//0.3초간 아무것도 리턴 x
 	if (sys_clock <= obj.next_move_time) {
@@ -543,7 +613,7 @@ double distance_by_position_f(POSITION p1, POSITION p2) {
 
 //* ================= 3-1) 샌드웜과의 최단 거리를 샌드웜의 목적지로 구현하는 함수 =================== */
 POSITION next_position_sand_worm_f(void) {
-	//거리들을 배열에 저장
+	//샌드웜과 유닛들 사이의 거리들 배열에 저장
 	double distances_of_sand_worm_arr[COMPARING_WITH_SAND_WORM] = { 0 };
 	for (int i = 0; i < COMPARING_WITH_SAND_WORM; i++) {
 		if (i == 0) {
@@ -553,7 +623,7 @@ POSITION next_position_sand_worm_f(void) {
 			distances_of_sand_worm_arr[i] = distance_by_position_f(Sand_Worm.pos[0], Haconen_Harvestor.pos[0]);
 		}
 	}
-	//가장 짧은 거리의 유닛의 위치를 목저지로 저장
+	//가장 짧은 거리를 샌드웜의 목저지로 설정
 	double shortest_of_sand_worm = distances_of_sand_worm_arr[0];
 	Sand_Worm.dest = Atreides_Harvestor.pos[0];
 	for (int i = 1; i < COMPARING_WITH_SAND_WORM; i++) {
@@ -561,47 +631,48 @@ POSITION next_position_sand_worm_f(void) {
 			Sand_Worm.dest = Haconen_Harvestor.pos[0];
 		}
 	}
+	// 가로축, 세로축 거리를 비교해서 더 먼 쪽 축으로 이동
 	POSITION diff = position_subtraction_f_inline(Sand_Worm.dest, Sand_Worm.pos[0]);
+	//샌드웜의 이동 방향 결정 방향키
 	DIRECTION dir;
-
-	
 	if (diff.row == 0 && diff.column == 0) {
 		return Sand_Worm.pos[0];
 	}
-	// 가로축, 세로축 거리를 비교해서 더 먼 쪽 축으로 이동
-	//가로축 이동
+	//세로축 이동
 	if (abs(diff.row) >= abs(diff.column)) {
 		dir = (diff.row >= 0) ? d_down : d_up; // d_down이 4 d_up가 1
 	}
-	//세로축 이동
+	//가로축 이동
 	else {
 		dir = (diff.column >= 0) ? d_right : d_left; // d_right 3 d_left 2
 	}
-	//절대값 비교를 통해 정한 방향을 새로운 위치를 계산하기 위해 활용
+	//새로운 위치 생성
 	POSITION Next_Sand_Worm_Pos = position_by_arrow_move_f_mac(Sand_Worm.pos[0], dir);
-
+	//유효성 체크 및 이동한 곳이 바위가 아닌 경우
 	if (1 <= Next_Sand_Worm_Pos.row && Next_Sand_Worm_Pos.row <= MAP_HEIGHT - 2 && \
 		1 <= Next_Sand_Worm_Pos.column && Next_Sand_Worm_Pos.column <= MAP_WIDTH - 2 && \
 		map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] < 0 &&
 		map[0][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] != 'R') {
 		return Next_Sand_Worm_Pos;
 	}
+	//유효성 체크 및 이동한 곳이 바위인 경우
 	else if (1 <= Next_Sand_Worm_Pos.row && Next_Sand_Worm_Pos.row <= MAP_HEIGHT - 2 && \
 			 1 <= Next_Sand_Worm_Pos.column && Next_Sand_Worm_Pos.column <= MAP_WIDTH - 2 && \
 			 map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] < 0 && map[0][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] == 'R') {
-		//위 방향키 인 경우
+		//상하 방향키인 경우 피해서가는 기능
 		if (dir == 1 || dir == 4) {
 			dir = (diff.column >= 0) ? d_right : d_left;
 			Next_Sand_Worm_Pos = position_by_arrow_move_f_mac(Sand_Worm.pos[0], dir);
 			return Next_Sand_Worm_Pos;
 		}
+		//좌우 방향키인 경우 피해서가는 기능
 		else if (dir == 2 || dir == 3) {
 			dir = (diff.row >= 0) ? d_down : d_up;
 			Next_Sand_Worm_Pos = position_by_arrow_move_f_mac(Sand_Worm.pos[0], dir);
 			return Next_Sand_Worm_Pos;
 		}
 	}
-	//하베스터를 마났을 때 잡아먹음
+	//하베스터를 만났을 때 샌드웜이 먹는 기능
 	else if (1 <= Next_Sand_Worm_Pos.row && Next_Sand_Worm_Pos.row <= MAP_HEIGHT - 2 && \
 			1 <= Next_Sand_Worm_Pos.column && Next_Sand_Worm_Pos.column <= MAP_WIDTH - 2 && \
 			map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] == 'H') 
@@ -610,60 +681,79 @@ POSITION next_position_sand_worm_f(void) {
 		return Next_Sand_Worm_Pos;
 	}
 }
-///* ================= 3-1) Sand_Worm의 움직임 구현 =================== */
+/* ================= 3-1) Sand_Worm의 움직임 구현 =================== */
 void sand_worm_move(void) {
-	//map에 대한 sand_worm의 정의 다시 보기
+	// 아직 시간이 안되면 아무것도 리턴하지 않음 
 	if (sys_clock <= Sand_Worm.next_move_time) {
-		// 아직 시간이 안되면 아무것도 리턴하지 않음 while루프의 다음 구문으로
 		return;
 	}
-	// 오브젝트(건물, 유닛 등)은 layer1(map[1])에 저장
-	// 기존 위치를 -1로 표시
+	// 기존 위치를 -1로 표시: map 버퍼링에 활용
 	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = -1;
-
-	// 오브젝트 포지션에 대한 변화를 초기화
+	// 샌드웜의 위치 변화 초기화
 	Sand_Worm.pos[0] = next_position_sand_worm_f();
 	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = Sand_Worm.representation;
-	Sand_Worm.next_move_time = sys_clock + Sand_Worm.speed;
+	// 다음 주기를 설정
+	Sand_Worm.next_move_time += Sand_Worm.speed;
 }
 
-/* ================= main() =================== */
+/* ====================================== main() ======================================== */
 int main(void) {
-	//srand((unsigned int)time(NULL)); 3)에서 사용
+	//srand((unsigned int)time(NULL)); 3)에서 사용 예정
+	
 	//1) intro함수
 	intro();
-	//1) 유닛, 지형 초기화 함수
+	//1) 유닛, 지형, 건물 초기화
 	init_map_land_building_unit();
+	//1) 상태 정보창 초기화
 	init_state_window_f();
+	//1) 시스템 메세지 창 초기화
 	init_system_message_f();
+	//1) 명령어 메세지 창 초기화
 	init_command_message_f();
 
+	//1)자원 상태 표시
 	display_resource(Spice_Population);
+	//1)게임 맵 화면 표시
 	display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks, Sand_Worm);
+	//1)상태창 정보 표시
 	display_state_window_f(state_window_arr);
+	//1)시스템 메세지 창 표시
 	display_system_message_w_f(system_message_arr);
+	//1)명령어 창 표시
 	display_command_message_w_f(command_window_arr);
+	//2)커서의 위치 표시
 	display_cursor_f(cursor, Atreides_Harvestor, Haconen_Harvestor);
 	while (1) {
+		// 2) 키 입력 Listen
 		KEY key1 = get_key();
+		// 2) 방향키 인지 확인
 		if (is_arrow_key_f_mac(key1)) {
+			//2) 잠시 더블방향키 입력 받기 위해 유닛 주기성을 고려한 대기 시간 설정 
 			Sleep(WAITING_SECOND_ARROW);
+			sys_clock += WAITING_SECOND_ARROW;
 			KEY key2 = get_key();
+			//2) 더블 방향키 입력인 경우 이동 기능
 			if (is_arrow_key_f_mac(key2)) {
 				cursor_move2_f(key_to_direction_f_mac(key2));
 			}
+			//2) 더블 방향키 입력이 아닌 경우 이동 기능
 			else {
 				cursor_move(key_to_direction_f_mac(key1));
 			}			
 		}
+		// 2) 방향키가 아닌 경우
 		else {
 			switch (key1) {
+			// 2-4) 취소 기능 구현
 			case k_esc: eraser_state_command_window(); break;
+			// 2-3) 선택 기능 구현
 			case k_space:
+				// 2-3) 선택 상태 정보창 표시
 				state_window_by_k_space(cursor, Rocks, 
 					  Spice, Desert, Sand_Worm,
 					  Atreides_Base, Atreides_Plate, Atreides_Harvestor,
 					  Haconen_Base, Haconen_Plate, Haconen_Harvestor);
+				//2-3) 선택 명령어 창 표시
 				command_message_by_k_space(cursor, Rocks, Spice, Sand_Worm,
 					  Atreides_Base, Atreides_Plate, Atreides_Harvestor,
 					  Haconen_Base, Haconen_Plate, Haconen_Harvestor);
@@ -675,19 +765,26 @@ int main(void) {
 			default: break;
 			}
 		}
-		// 샘플 오브젝트 동작
+		//샘플 오브젝트 동작
 		sample_obj_move();
+		//3-1) 샌드웜 움직임 기능
 		sand_worm_move();
 		
-
+		//1)자원 상태 표시
 		display_resource(Spice_Population);
+		//1)게임 맵 화면 표시
 		display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks, Sand_Worm);
+		//1)상태창 정보 표시
 		display_state_window_f(state_window_arr);
+		//1)시스템 메세지 창 표시
 		display_system_message_w_f(system_message_arr);
+		//1)명령어 창 표시
 		display_command_message_w_f(command_window_arr);
+		//2)커서의 위치 표시
 		display_cursor_f(cursor, Atreides_Harvestor, Haconen_Harvestor);
-		// 시간의 단위
+		//1) 기본 시간 단위
 		Sleep(TICK);
+		//1) 시간 축적
 		sys_clock += 10;
 	}
 	return 0;

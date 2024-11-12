@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <math.h>
 
-/* ================= system parameters =================== */
+/* ================= 시간 파라미터 =================== */
 #define TICK 10		// time unit(ms)
 #define WAITING_SECOND_ARROW 200
 
@@ -16,84 +16,80 @@
 #define MAP_WIDTH	60
 #define MAP_HEIGHT	18
 
+/* ================= 창 크기 파라미터 =================== */
+// SetConsoleCursorPosition()함수의 특성 고려
+// gotoxy()가 제대로 작동하는 범위로 창 크기 정의
+
 #define STATE_WINDOW_MAX_HEIGHT 18
 #define STATE_WINDOW_MAX_WIDTH 50
-// 배열 크기에 따라 gotoxy()함수가 제대로 작동하지 않을 수 있다.
-// SetConsoleCursorPosition()함수의 특성
+
 #define SYSTEM_MESSAGE_W_HEIGHT 10
 #define SYSTEM_MESSAGE_W_WIDTH 60
 
 #define COMMAND_WINDOW_HEIGHT 10
 #define COMMAND_WINDOW_WIDTH 50
 
-/* ================= 3-1 비교 대상 수 파라미터 =================== */
+/* ================= 3-1 샌드웜과 비교할 유닛 대상 수 파라미터 =================== */
 #define COMPARING_WITH_SAND_WORM 2
-/* ================= 위치와 방향 =================== */
-//common.h에 구조체들에 대한 선언
-// 맵에서 위치를 나타내는 구조체
+
+/* ================= 위치, 방향 관련 구조체 =================== */
+// (행, 열) 위치를 나타내는 구조체
 typedef struct {
 	int row, column;
 } POSITION;
 
-// 커서 위치
+// 커서 직전 위치, 현재 위치를 나타내는 구조체 
 typedef struct {
 	POSITION previous;  // 직전 위치
 	POSITION current;   // 현재 위치
 } CURSOR;
 
-// 입력 가능한 키 종류.
+// 입력 가능한 키 종류 열거체
 typedef enum {
-	// k_none: 입력된 키가 없음. d_stay(안 움직이는 경우)에 대응
-	k_none = 0, k_up, k_left, k_right, k_down,
-	k_space, k_esc,
-	k_quit,
-	k_undef, // 정의되지 않은 키 입력	
+	k_none = 0, k_up, k_left, k_right, k_down, //1:위, 2: 왼쪽, 3: 오른쪽, 4 : 아래
+	k_space, k_esc, //5: 스페이스, 6: ESC
+	k_quit, //7: 게임 종료
+	k_undef, // 8: 정의되지 않은 키 입력	
 } KEY;
 
-
-// DIRECTION은 KEY의 부분집합이지만, semantic 열거체 정의
+// 방향키의 의미론적인 semantic 열거체 초기화
 typedef enum {
 	d_stay = 0, d_up, d_left, d_right, d_down
 } DIRECTION;
-
-
-/* ================= 위치와 방향(2) =================== */
-// 편의성을 위한 함수들. KEY, POSITION, DIRECTION 구조체들을 유기적으로 변환
-
-// 편의성 함수
+// 공통: 두 좌표의 합을 구하는 inline 함수
 inline POSITION position_move_f(POSITION p1, POSITION p2) {
 	POSITION p = { p1.row + p2.row, p1.column + p2.column };
 	return p;
 }
 
-// p1 - p2
+// 공통: 두 좌표의 차를 구하는 inline 함수 
 inline POSITION position_subtraction_f_inline(POSITION p1, POSITION p2) {
 	POSITION p = { p1.row - p2.row, p1.column - p2.column };
 	return p;
 }
 
-// 방향키인지 확인하는 함수 // k_up : 1 ~ k_down : 4
+// 2-1) 방향키인지 확인하는 매크로 함수
 #define is_arrow_key_f_mac(k)		(k_up <= (k) && (k) <= k_down)
 
-// 화살표 '키'(KEY)를 '방향'(DIRECTION)으로 변환. 정수 값은 똑같으니 타입만 바꿔주면 됨
+// 2-1) 화살표 '키'(KEY)를 '방향'(DIRECTION)으로 변환하는 매크로함수 
 #define key_to_direction_f_mac(k)		(DIRECTION)(k)
 
-// DIRECTION을 POSITION 벡터로 변환해서 좌표를 연산할 준비를 도와주는 함수
+// 2-1) 방향키 1회 입력을 POSITION 벡터로 변환해서 좌표를 연산할 준비를 도와주는 함수
 inline POSITION dtop(DIRECTION d) {
 	static POSITION direction_vector[] = { {0, 0}, {-1, 0}, {0, -1}, {0, 1}, {1, 0} };
 	return direction_vector[d];
 }
-
+// 2-2) 더블 방향키 입력을 POSITION 벡터로 변환해서 좌표를 연산할 준비를 도와주는 함수
 inline POSITION dtop_f_inline(DIRECTION Key) {
 	static POSITION Direction_Vector2_arr[] = { {0, 0}, {-5, 0}, {0, -5}, {0, 5}, {5, 0} };
 	return Direction_Vector2_arr[Key];
 }
-
-// p를 d 방향으로 이동시킨 POSITION
+// 2-1) 위치 벡터p를 1회 키 입력 방향 벡터d 와 더하는 매크로 함수 
 #define position_by_arrow_move_f_mac(p, d)		(position_move_f((p), dtop(d)))
+// 2-2) 위치 벡터p를 2회 키 입력 방향 벡터d 와 더하는 매크로 함수
 #define position_by_arrow_move2_f_mac(p, d)		(position_move_f((p), dtop_f_inline(d)))
 
-/* ================= 구조체 선언부 =================== */
+/* ================= 자원, 유닛, 지형, 건물 구조체 선언부 =================== */
 //자원 구조체 선언
 typedef struct {
 	int spice;		// 현재 보유한 스파이스
