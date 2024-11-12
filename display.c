@@ -43,18 +43,22 @@ void display_resource(RESOURCE resource) {
 void project_map_f(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGHT][MAP_WIDTH]) {
 	for (int i = 0; i < MAP_HEIGHT; i++) {
 		for (int j = 0; j < MAP_WIDTH; j++) {
-			for (int k = 0; k < N_LAYER; k++) {//유닛이 위에 올라가면 겹치도록 표현
-				if (src[k][i][j] >= 0) {//layer1의 -1로 저장된 공간은 저장하지 않음
+			for (int k = 0; k < N_LAYER; k++) {
+				//유닛이 위에 올라가면 겹치도록 표현 // 유닛이 올라가면 
+				if (src[k][i][j] >= 0) {
+					//layer2의 -1로 저장된 공간은 배열의 값이 전달 되지 않는다.
 					dest[i][j] = src[k][i][j];
 				}
-			}
+			}  //src를 전달하는 것에 의미가 있다.
 		}
 	}
 }
 void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 	UNIT_ATTRIBUTE Atreides_Harvestor,
 	UNIT_ATTRIBUTE Haconen_Harvestor,
-	LAND_ATTRIBUTE Rocks
+	LAND_ATTRIBUTE Rocks,
+	UNIT_ATTRIBUTE Sand_Worm
+
 )
 {
 	project_map_f(map, backbuf);//map에 대한 정보를 2차원 배열 백버퍼에 전달
@@ -91,7 +95,12 @@ void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 					printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], HACONEN_COLOR);
 				}
 				else if (backbuf[i][j] == 'W') {
-					printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], SAND_WORM_COLOR);
+					if (Sand_Worm.pos[0].row == i && Sand_Worm.pos[0].column == j) {
+						printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], SAND_WORM_COLOR);
+					}
+					else if (Sand_Worm.pos[1].row == i && Sand_Worm.pos[1].column == j) {
+						printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], SAND_WORM_COLOR);
+					}
 				}
 				else {
 					printc(position_move_f(Map_Top_Left_Coord, Backbuf_Pos), backbuf[i][j], COLOR_DEFAULT);
@@ -185,8 +194,9 @@ void state_window_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
 	POSITION Shift_To_State_W = { 1, 1 };
 	POSITION Before_Unit_Position = { 0, 0 };
 	char ch = frontbuf[Cursor_Current_Pos.row][Cursor_Current_Pos.column];
+	
+	//초반에 안 지우고 시작 구현
 	static int state_count_k_space = 0;
-		
 	if (state_count_k_space >=1 && (Before_Unit_Position.row != Cursor_Current_Pos.row ||
 		Before_Unit_Position.column != Cursor_Current_Pos.column))
 	{
@@ -209,7 +219,7 @@ void state_window_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
 		}
 	}
 	//스파이스
-	if ( '1' <= ch && ch <= '9') {
+	else if ( '1' <= ch && ch <= '9') {
 		for (int i = 0; i < 2; i++) {
 			if (Spice.Land_Position[i].row == Cursor_Current_Pos.row &&
 				Spice.Land_Position[i].column == Cursor_Current_Pos.column)
@@ -296,6 +306,8 @@ void state_window_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
 	else {
 		print_state_info_f(position_move_f(S_W_Top_Left_Coord, Shift_To_State_W),
 			Desert.introduce_self, COLOR_DEFAULT);
+		Before_Unit_Position.row = Cursor_Current_Pos.row; //커서의 위치를 이전 유닛 위치에 초기화 해준다.
+		Before_Unit_Position.column = Cursor_Current_Pos.column;
 	}
 }
 //2-3) 명령어 선택창 출력 함수
@@ -314,7 +326,7 @@ void command_message_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
 	POSITION Before_Unit_Position = { 0, 0 };
 	//삭제하고 출력 구현
 	static int command_count_k_space = 0;
-	
+	//사막과 바위 오류 고치기
 	if (command_count_k_space >= 1 && (Before_Unit_Position.row != Cursor_Current_Pos.row ||
 		Before_Unit_Position.column != Cursor_Current_Pos.column))
 	{
@@ -339,7 +351,7 @@ void command_message_by_k_space(CURSOR cursor, LAND_ATTRIBUTE Rocks,
 		}
 	}
 	//스파이스
-	if ('1' <= ch && ch <= '9') {
+	else if ('1' <= ch && ch <= '9') {
 		for (int i = 0; i < 2; i++) {
 			if (Spice.Land_Position[i].row == Cursor_Current_Pos.row &&
 				Spice.Land_Position[i].column == Cursor_Current_Pos.column)

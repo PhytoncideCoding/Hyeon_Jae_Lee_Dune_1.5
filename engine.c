@@ -39,7 +39,8 @@ LAND_ATTRIBUTE Spice = {
 .commands_info = "명령어: 없음"
 };
 LAND_ATTRIBUTE Desert = {
-.introduce_self = "사막: 건물을 지을 수 없음"
+.introduce_self = "사막: 건물을 지을 수 없음",
+.commands_info = "명령어: 없음"
 };
 /* ================= 건물 전역 구조체 선언 =================== */
 //아트레이디스 본진
@@ -100,7 +101,7 @@ BUILDING_ATTRIBUTE Haconen_Base = {
 };
 //하코넨 장판
 BUILDING_ATTRIBUTE Haconen_Plate = {
-.pos = {{1, MAP_WIDTH - 3}, {1, MAP_WIDTH - 4}, {2, MAP_WIDTH - 3} , {2, MAP_WIDTH - 4}},
+.pos = {{1, MAP_WIDTH - 5}, {1, MAP_WIDTH - 4}, {2, MAP_WIDTH - 5} , {2, MAP_WIDTH - 4}},
 .introduce_self = "+건물: 하코넨 장판(P:Plate)\n\
 +설명: 장판 위에 건물 건설 가능\n\
 +건설비용: 1\n\
@@ -234,6 +235,10 @@ UNIT_ATTRIBUTE Haconen_Heavy_Tank = {
 // 중립 샌드웜
 UNIT_ATTRIBUTE Sand_Worm = {
 .pos = {{4, 4}, {12, MAP_WIDTH - 10}},
+.dest = {4, 4},
+.representation = 'W',
+.speed = 500,
+.next_move_time = 500,
 .introduce_self = "+유닛: 샌드웜(중립)\n\
 +생산비용: 없음\n\
 +인구수: 없음\n\
@@ -267,6 +272,10 @@ void cursor_move2_f(DIRECTION dir);
 /* ================= 유닛 이동 제어 함수 선언=================== */
 POSITION sample_obj_next_position(void);
 void sample_obj_move(void);
+
+double distance_by_position_f(POSITION p1, POSITION p2);
+POSITION next_position_sand_worm_f(void);
+void sand_worm_move(void);
 
 /* ================= 1)인트로 함수=================== */
 void intro(void) {
@@ -356,7 +365,7 @@ void init_map_land_building_unit() {
 
 		}
 	}
-	// layer 1(map[1])은 비워 두기(-1로 채움)
+	// layer 1의 기본값을 -
 	for (int i = 0; i < MAP_HEIGHT; i++) {
 		for (int j = 0; j < MAP_WIDTH; j++) {
 			map[1][i][j] = -1;
@@ -371,8 +380,6 @@ void init_map_land_building_unit() {
 	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = 'W';
 	map[1][Sand_Worm.pos[1].row][Sand_Worm.pos[1].column] = 'W';
 }
-
-
 //상태 정보 창 초기화
 void init_state_window_f(void) {
 	for (int i = 0; i < STATE_WINDOW_MAX_WIDTH; i++) {
@@ -387,7 +394,6 @@ void init_state_window_f(void) {
 		}
 	}
 }
-
 // 시스템 메세지 창 초기화
 void init_system_message_f(void) {
 	for (int i = 0; i < SYSTEM_MESSAGE_W_WIDTH; i++) {
@@ -445,6 +451,28 @@ void cursor_move2_f(DIRECTION dir) {
 		cursor.previous = cursor.current;
 		cursor.current = new_pos;
 	}
+	else {
+		if (dir == 1) {
+			new_pos.row = 1;
+			cursor.previous = cursor.current;
+			cursor.current = new_pos;
+		}
+		else if (dir == 2) {
+			new_pos.column = 1;
+			cursor.previous = cursor.current;
+			cursor.current = new_pos;
+		}
+		else if (dir == 3) {
+			new_pos.column = MAP_WIDTH - 2;
+			cursor.previous = cursor.current;
+			cursor.current = new_pos;
+		}
+		else if (dir == 4) {
+			new_pos.row = MAP_HEIGHT - 2;
+			cursor.previous = cursor.current;
+			cursor.current = new_pos;
+		}
+	}
 }
 /* ================= sample object movement =================== */
 POSITION sample_obj_next_position(void) {
@@ -453,9 +481,7 @@ POSITION sample_obj_next_position(void) {
 	POSITION diff = position_subtraction_f_inline(obj.dest, obj.pos[0]);
 	DIRECTION dir;
 
-	// 지금은 단순히 원래 자리로 왕복
-	// 가로축과 세로축에서 모두 차이가 없을 때
-	// 목적지 도착시 차이가 없어진다.
+	// 목적지에 도달한 경우
 	if (diff.row == 0 && diff.column == 0) {
 		if (obj.dest.row == 1 && obj.dest.column == 1) {
 			// topleft --> bottomright로 목적지 설정
@@ -467,7 +493,7 @@ POSITION sample_obj_next_position(void) {
 			POSITION new_dest = { 1, 1 };
 			obj.dest = new_dest;
 		}
-		return obj.pos[0];
+		return obj.pos[0]; //잠시 대기
 	}
 
 	// 가로축, 세로축 거리를 비교해서 더 먼 쪽 축으로 이동
@@ -479,18 +505,12 @@ POSITION sample_obj_next_position(void) {
 	else {
 		dir = (diff.column >= 0) ? d_right : d_left;
 	}
-
-	//위의 방향키 변화에 대해
-	// validation check
-	// next_pos가 맵을 벗어나지 않고, (지금은 없지만)장애물에 부딪히지 않으면 
-	// 다음 위치로 이동
-	// 지금은 충돌 시 아무것도 안 하는데, 
-	// 나중에는 장애물을 피해가거나 적과 전투를 하거나... 등등
+	
 	POSITION next_pos = position_by_arrow_move_f_mac(obj.pos[0], dir);
 	if (1 <= next_pos.row && next_pos.row <= MAP_HEIGHT - 2 && \
 		1 <= next_pos.column && next_pos.column <= MAP_WIDTH - 2 && \
 		map[1][next_pos.row][next_pos.column] < 0) {
-		return next_pos;
+		return next_pos; // position_by_arrow_move_f_mac()으로 계산한 위치로 이동
 	}
 	else {
 		return obj.pos[0];  // 제자리
@@ -506,13 +526,105 @@ void sample_obj_move(void) {
 	//시간이 된 순간
 
 	// 오브젝트(건물, 유닛 등)은 layer1(map[1])에 저장
-	//음수를 저장하는 이유는 프론트 버퍼에 이전 표시는 전달하지 않기 위해서
+	// 움직이기 전에 원래 있던 위치를 -1로 표시
 	map[1][obj.pos[0].row][obj.pos[0].column] = -1;
 	// 오브젝트 포지션에 대한 변화를 초기화
 	obj.pos[0] = sample_obj_next_position();
 	map[1][obj.pos[0].row][obj.pos[0].column] = obj.representation;
 
 	obj.next_move_time = sys_clock + obj.speed;
+}
+///* ================= 3-1) 거리를 구하는 함수 =================== */
+double distance_by_position_f(POSITION p1, POSITION p2) {
+	POSITION subtraction = position_subtraction_f_inline(p1, p2);
+	double distance = sqrt(pow(subtraction.row, 2) + pow(subtraction.column, 2));
+	return distance;
+}
+
+//* ================= 3-1) 샌드웜과의 최단 거리를 샌드웜의 목적지로 구현하는 함수 =================== */
+POSITION next_position_sand_worm_f(void) {
+	//거리들을 배열에 저장
+	double distances_of_sand_worm_arr[COMPARING_WITH_SAND_WORM] = { 0 };
+	for (int i = 0; i < COMPARING_WITH_SAND_WORM; i++) {
+		if (i == 0) {
+			distances_of_sand_worm_arr[i] = distance_by_position_f(Sand_Worm.pos[0], Atreides_Harvestor.pos[0]);
+		}
+		else if (i == 1) {
+			distances_of_sand_worm_arr[i] = distance_by_position_f(Sand_Worm.pos[0], Haconen_Harvestor.pos[0]);
+		}
+	}
+	//가장 짧은 거리의 유닛의 위치를 목저지로 저장
+	double shortest_of_sand_worm = distances_of_sand_worm_arr[0];
+	Sand_Worm.dest = Atreides_Harvestor.pos[0];
+	for (int i = 1; i < COMPARING_WITH_SAND_WORM; i++) {
+		if (i == 1 && (shortest_of_sand_worm > distances_of_sand_worm_arr[i]) ) {
+			Sand_Worm.dest = Haconen_Harvestor.pos[0];
+		}
+	}
+	POSITION diff = position_subtraction_f_inline(Sand_Worm.dest, Sand_Worm.pos[0]);
+	DIRECTION dir;
+
+	
+	if (diff.row == 0 && diff.column == 0) {
+		return Sand_Worm.pos[0];
+	}
+	// 가로축, 세로축 거리를 비교해서 더 먼 쪽 축으로 이동
+	//가로축 이동
+	if (abs(diff.row) >= abs(diff.column)) {
+		dir = (diff.row >= 0) ? d_down : d_up; // d_down이 4 d_up가 1
+	}
+	//세로축 이동
+	else {
+		dir = (diff.column >= 0) ? d_right : d_left; // d_right 3 d_left 2
+	}
+	//절대값 비교를 통해 정한 방향을 새로운 위치를 계산하기 위해 활용
+	POSITION Next_Sand_Worm_Pos = position_by_arrow_move_f_mac(Sand_Worm.pos[0], dir);
+
+	if (1 <= Next_Sand_Worm_Pos.row && Next_Sand_Worm_Pos.row <= MAP_HEIGHT - 2 && \
+		1 <= Next_Sand_Worm_Pos.column && Next_Sand_Worm_Pos.column <= MAP_WIDTH - 2 && \
+		map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] < 0 &&
+		map[0][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] != 'R') {
+		return Next_Sand_Worm_Pos;
+	}
+	else if (1 <= Next_Sand_Worm_Pos.row && Next_Sand_Worm_Pos.row <= MAP_HEIGHT - 2 && \
+			 1 <= Next_Sand_Worm_Pos.column && Next_Sand_Worm_Pos.column <= MAP_WIDTH - 2 && \
+			 map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] < 0 && map[0][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] == 'R') {
+		//위 방향키 인 경우
+		if (dir == 1 || dir == 4) {
+			dir = (diff.column >= 0) ? d_right : d_left;
+			Next_Sand_Worm_Pos = position_by_arrow_move_f_mac(Sand_Worm.pos[0], dir);
+			return Next_Sand_Worm_Pos;
+		}
+		else if (dir == 2 || dir == 3) {
+			dir = (diff.row >= 0) ? d_down : d_up;
+			Next_Sand_Worm_Pos = position_by_arrow_move_f_mac(Sand_Worm.pos[0], dir);
+			return Next_Sand_Worm_Pos;
+		}
+	}
+	//하베스터를 마났을 때 잡아먹음
+	else if (1 <= Next_Sand_Worm_Pos.row && Next_Sand_Worm_Pos.row <= MAP_HEIGHT - 2 && \
+			1 <= Next_Sand_Worm_Pos.column && Next_Sand_Worm_Pos.column <= MAP_WIDTH - 2 && \
+			map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] == 'H') 
+	{
+		map[1][Next_Sand_Worm_Pos.row][Next_Sand_Worm_Pos.column] == 'W';
+		return Next_Sand_Worm_Pos;
+	}
+}
+///* ================= 3-1) Sand_Worm의 움직임 구현 =================== */
+void sand_worm_move(void) {
+	//map에 대한 sand_worm의 정의 다시 보기
+	if (sys_clock <= Sand_Worm.next_move_time) {
+		// 아직 시간이 안되면 아무것도 리턴하지 않음 while루프의 다음 구문으로
+		return;
+	}
+	// 오브젝트(건물, 유닛 등)은 layer1(map[1])에 저장
+	// 기존 위치를 -1로 표시
+	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = -1;
+
+	// 오브젝트 포지션에 대한 변화를 초기화
+	Sand_Worm.pos[0] = next_position_sand_worm_f();
+	map[1][Sand_Worm.pos[0].row][Sand_Worm.pos[0].column] = Sand_Worm.representation;
+	Sand_Worm.next_move_time = sys_clock + Sand_Worm.speed;
 }
 
 /* ================= main() =================== */
@@ -527,7 +639,7 @@ int main(void) {
 	init_command_message_f();
 
 	display_resource(Spice_Population);
-	display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks);
+	display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks, Sand_Worm);
 	display_state_window_f(state_window_arr);
 	display_system_message_w_f(system_message_arr);
 	display_command_message_w_f(command_window_arr);
@@ -536,14 +648,13 @@ int main(void) {
 		KEY key1 = get_key();
 		if (is_arrow_key_f_mac(key1)) {
 			Sleep(WAITING_SECOND_ARROW);
-			sys_clock += WAITING_SECOND_ARROW;
 			KEY key2 = get_key();
 			if (is_arrow_key_f_mac(key2)) {
 				cursor_move2_f(key_to_direction_f_mac(key2));
 			}
 			else {
 				cursor_move(key_to_direction_f_mac(key1));
-			}
+			}			
 		}
 		else {
 			switch (key1) {
@@ -566,9 +677,11 @@ int main(void) {
 		}
 		// 샘플 오브젝트 동작
 		sample_obj_move();
+		sand_worm_move();
 		
+
 		display_resource(Spice_Population);
-		display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks);
+		display_map_f(map, Atreides_Harvestor, Haconen_Harvestor, Rocks, Sand_Worm);
 		display_state_window_f(state_window_arr);
 		display_system_message_w_f(system_message_arr);
 		display_command_message_w_f(command_window_arr);

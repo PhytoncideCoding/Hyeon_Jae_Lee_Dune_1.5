@@ -6,10 +6,11 @@
 #include <Windows.h>
 #include <conio.h>
 #include <assert.h>
+#include <math.h>
 
 /* ================= system parameters =================== */
 #define TICK 10		// time unit(ms)
-#define WAITING_SECOND_ARROW 500
+#define WAITING_SECOND_ARROW 200
 
 #define N_LAYER 2
 #define MAP_WIDTH	60
@@ -25,6 +26,8 @@
 #define COMMAND_WINDOW_HEIGHT 10
 #define COMMAND_WINDOW_WIDTH 50
 
+/* ================= 3-1 비교 대상 수 파라미터 =================== */
+#define COMPARING_WITH_SAND_WORM 2
 /* ================= 위치와 방향 =================== */
 //common.h에 구조체들에 대한 선언
 // 맵에서 위치를 나타내는 구조체
@@ -102,11 +105,11 @@ typedef struct {
 typedef
 struct unit_attribute_t {
 	POSITION pos[2];		 // 현재 위치(position)
-	POSITION dest;		 // 목적지(destination)
+	POSITION dest;		 // 목적지(10estination)
 	char representation; // 화면에 표시할 문자
-	int speed;
+	int speed; // 주기
 	int move_period;	 // '몇 ms마다 한 칸 움직이는지'를 뜻함
-	int next_move_time;	 // 다음에 움직일 시간
+	int next_move_time;	 // 다음에 움직일 초기 시간 및 축적용 변수
 	char introduce_self[(STATE_WINDOW_MAX_WIDTH - 2) * (STATE_WINDOW_MAX_HEIGHT - 2)];
 	char commands_info[(COMMAND_WINDOW_WIDTH - 2) * (COMMAND_WINDOW_HEIGHT - 2)];
 } UNIT_ATTRIBUTE;

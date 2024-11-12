@@ -26,7 +26,8 @@ extern void project_map_f(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MA
 extern void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 	UNIT_ATTRIBUTE Atreides_Harvestor,
 	UNIT_ATTRIBUTE Haconen_Harvestor, 
-	LAND_ATTRIBUTE Rocks
+	LAND_ATTRIBUTE Rocks,
+	UNIT_ATTRIBUTE Sand_Worm
 );
 
 // 1) 상태창 직사각형 출력 함수 선언
