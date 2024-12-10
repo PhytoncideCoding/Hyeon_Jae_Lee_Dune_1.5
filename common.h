@@ -56,6 +56,7 @@ typedef enum {
 typedef enum {
 	d_stay = 0, d_up, d_left, d_right, d_down
 } DIRECTION;
+
 // 공통: 두 좌표의 합을 구하는 inline 함수
 inline POSITION position_move_f(POSITION p1, POSITION p2) {
 	POSITION p = { p1.row + p2.row, p1.column + p2.column };

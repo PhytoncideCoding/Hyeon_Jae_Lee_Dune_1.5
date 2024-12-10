@@ -53,6 +53,7 @@ void project_map_f(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGH
 		}
 	}
 }
+
 //1) 맵 출력 함수
 void display_map_f(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 	UNIT_ATTRIBUTE Atreides_Harvestor,

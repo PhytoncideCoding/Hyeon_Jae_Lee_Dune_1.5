@@ -30,7 +30,7 @@ KEY get_key(void) {
 	switch (byte) {
 	case 27: return k_esc;
 	case 32: return k_space; //5를 리턴
-	case 'q': return k_quit;  // 5 'q'를 누르면 종료
+	case 'q': return k_quit;  //'q'를 누르면 종료
 	case 224:
 		byte = _getch();  // MSB 224가 입력 되면 1바이트 더 전달 받기
 		switch (byte) {
@@ -98,6 +98,7 @@ void reset_state_window_f(POSITION State_Window_Pos, char blank_character, int c
 		gotoxy(State_Window_Pos);
 	}
 }
+
 //2-3) 다른 오브젝트 선택 시 기존 명령어 창 문자열 삭제하는 함수
 void reset_command_window_f(POSITION Command_Window_Pos, char blank_character, int color) {
 

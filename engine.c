@@ -1,4 +1,5 @@
-﻿/* ================= 설명 =================== */ 
+﻿/* ================= 중간 제출 설명 =================== */ 
+// 최종 제출 설명은 README.md에 작성
 //engine.c
 //1) 게임 시작 화면 구현: void intro
 //1) 게임 종료 화면 구현: void outro
@@ -11,7 +12,7 @@
 //+@ 추가 기능 구현: 더블 방향키 입력시 범위 벗어나는 경우 각 방향의 최대한 끝으로 위치하게 조정 기능 추가하였습니다.
 //3-1) 거리를 구하는 함수 double distance_by_position_f
 //3-1) 샌드웜과의 최단 거리를 샌드웜의 목적지로 구현하는 함수 POSITION next_position_sand_worm_f
-//3-1) Sand_Worm의 움직임 구현 void sand_worm_move
+//3-1) Sand_Worm의 움직임 구현 void sand_worm_move_f
 //display.c
 //1) 자원 상태 출력 함수 void display_resource
 //1) 맴 버퍼링 함수 void project_map_f
@@ -341,8 +342,9 @@ POSITION sample_obj_next_position(void);
 void sample_obj_move(void);
 //샌드웜
 double distance_by_position_f(POSITION p1, POSITION p2);
-POSITION next_position_sand_worm_f(void);
-void sand_worm_move(void);
+POSITION next_destination_sand_worm_f(void); //수정중
+POSITION next_position_sand_worm_f(void); //수정중
+void sand_worm_move_f(void); //수정중
 /* ================= 1) 화면 배치:인트로 함수=================== */
 void intro(void) {
 	set_color(INTRO_OUTTRO_TITLE);
@@ -361,7 +363,7 @@ void intro(void) {
 	printf("[                                                   ]\n");
 	printf("[ -Paul Atreides-                                   ]\n");
 	printf("=====================================================\n");
-	Sleep(500);
+	Sleep(5000);
 	system("cls");
 }
 /* ================= 1) outro 함수=================== */
@@ -490,6 +492,7 @@ void init_command_message_f(void) {
 		}
 	}
 }
+
 //2) 방향키에 따라 이동하는 커서 구현 
 void cursor_move(DIRECTION dir) {
 	//현재 커서의 위치
@@ -610,32 +613,68 @@ double distance_by_position_f(POSITION p1, POSITION p2) {
 	double distance = sqrt(pow(subtraction.row, 2) + pow(subtraction.column, 2));
 	return distance;
 }
+///* ================= 3-1) 샌드웜과 유닛의 최단 거리를 목적지로 변경하는 함수 =================== */ 수정중
+POSITION next_destination_sand_worm_f(void) {
 
-//* ================= 3-1) 샌드웜과의 최단 거리를 샌드웜의 목적지로 구현하는 함수 =================== */
-POSITION next_position_sand_worm_f(void) {
-	//샌드웜과 유닛들 사이의 거리들 배열에 저장
+	static int called_unit_count = 0;
+	//목적지에 도착하면 새로운 목적지 탐색을 위해 최소값 찾는 인덱스를 한 칸 이동
+	if (Sand_Worm.pos[0].row == Sand_Worm.dest.row && Sand_Worm.pos[0].column == Sand_Worm.dest.column) {
+		called_unit_count++;
+	}
+
+	//거리 계산을 할 대상들을 구조체 배열에 저장
+	POSITION Unit_Position[COMPARING_WITH_SAND_WORM] = {
+		Atreides_Harvestor.pos[0],
+		Haconen_Harvestor.pos[0]
+	};
+
+	//각 유닛들과의 거리를 저장할 배열 초기화
 	double distances_of_sand_worm_arr[COMPARING_WITH_SAND_WORM] = { 0 };
-	for (int i = 0; i < COMPARING_WITH_SAND_WORM; i++) {
-		if (i == 0) {
-			distances_of_sand_worm_arr[i] = distance_by_position_f(Sand_Worm.pos[0], Atreides_Harvestor.pos[0]);
-		}
-		else if (i == 1) {
-			distances_of_sand_worm_arr[i] = distance_by_position_f(Sand_Worm.pos[0], Haconen_Harvestor.pos[0]);
+	for (int i = 0 + called_unit_count; i < COMPARING_WITH_SAND_WORM; i++) {
+		distances_of_sand_worm_arr[i] = distance_by_position_f(Sand_Worm.pos[0], Unit_Position[i]);
+	}
+
+	//각 유닛들과 샌드웜1의 거리 중 가장 최소의 길이인 유닛의 위치를 목적지로 설정
+	double shortest_distance_with_sandworm = distances_of_sand_worm_arr[0 + called_unit_count];
+	Sand_Worm.dest = Unit_Position[0+ called_unit_count];
+	int minimum_index = 0;
+	for (int i = 1 + called_unit_count; i < COMPARING_WITH_SAND_WORM; i++) {
+		if (shortest_distance_with_sandworm > distances_of_sand_worm_arr[i]) {
+			shortest_distance_with_sandworm = distances_of_sand_worm_arr[i];
+			Sand_Worm.dest = Unit_Position[i];
+			minimum_index = i;
 		}
 	}
-	//가장 짧은 거리를 샌드웜의 목저지로 설정
-	double shortest_of_sand_worm = distances_of_sand_worm_arr[0];
-	Sand_Worm.dest = Atreides_Harvestor.pos[0];
-	for (int i = 1; i < COMPARING_WITH_SAND_WORM; i++) {
-		if (i == 1 && (shortest_of_sand_worm > distances_of_sand_worm_arr[i]) ) {
-			Sand_Worm.dest = Haconen_Harvestor.pos[0];
-		}
+	//선택한 목적지는 Unit_Position 구조체 배열에 맨 앞으로 이동
+	// 더 이상 갈 목적지가 없으면 어떻게 할지 생각
+	// Unit_Positon 구조체 배열의 최소값 저장 인덱스 어떻게 표현할지 생각
+	if (Sand_Worm.dest.row != Unit_Position[0].row && \
+		Sand_Worm.dest.column != Unit_Position[0].column) {
+		POSITION Temporal_Position;
+		Temporal_Position = Unit_Position[0];
+		Unit_Position[0] = Sand_Worm.dest;
+		Unit_Position[minimum_index] = Temporal_Position;
 	}
+
+	return Sand_Worm.dest;
+}
+//* ================= 3-1) 샌드웜의 위치에서 목적지까지 이동방법 구현하는 함수 =================== */
+POSITION next_position_sand_worm_f(void) {
+	// 초기 샌드웜 위치 정의
+	static int init_sand_worm_count = 0;
+	if (init_sand_worm_count == 0) {
+		Sand_Worm.dest = next_destination_sand_worm_f();
+		init_sand_worm_count++;
+	}
+
 	// 가로축, 세로축 거리를 비교해서 더 먼 쪽 축으로 이동
 	POSITION diff = position_subtraction_f_inline(Sand_Worm.dest, Sand_Worm.pos[0]);
 	//샌드웜의 이동 방향 결정 방향키
 	DIRECTION dir;
+	//목적지에 도착한 경우
 	if (diff.row == 0 && diff.column == 0) {
+		//새로운 목적지로 설정
+		Sand_Worm.dest = next_destination_sand_worm_f();
 		return Sand_Worm.pos[0];
 	}
 	//세로축 이동
@@ -682,7 +721,7 @@ POSITION next_position_sand_worm_f(void) {
 	}
 }
 /* ================= 3-1) Sand_Worm의 움직임 구현 =================== */
-void sand_worm_move(void) {
+void sand_worm_move_f(void) {
 	// 아직 시간이 안되면 아무것도 리턴하지 않음 
 	if (sys_clock <= Sand_Worm.next_move_time) {
 		return;
@@ -698,7 +737,7 @@ void sand_worm_move(void) {
 
 /* ====================================== main() ======================================== */
 int main(void) {
-	//srand((unsigned int)time(NULL)); 3)에서 사용 예정
+	srand((unsigned int)time(NULL)); //3-3에 랜덤 방향 설정에 사용하기
 	
 	//1) intro함수
 	intro();
@@ -768,7 +807,7 @@ int main(void) {
 		//샘플 오브젝트 동작
 		sample_obj_move();
 		//3-1) 샌드웜 움직임 기능
-		sand_worm_move();
+		sand_worm_move_f();
 		
 		//1)자원 상태 표시
 		display_resource(Spice_Population);
